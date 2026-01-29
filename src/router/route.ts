@@ -24,7 +24,7 @@ import Setting from '@/views/admin/Setting.vue'
 import ManageLecture from '@/views/admin/ManageLecture.vue'
 import ManageCategory from '@/views/ManageCategory.vue'
 import Bought from '@/views/Bought.vue'
-import Order from '@/views/Order.vue'
+import Order from '@/views/Order.vue';
 import useAuthentication from '@/stores/Authentication.ts'
 import Info from '@/views/Info.vue'
 import ManageQuiz from '@/views/admin/ManageQuiz.vue'

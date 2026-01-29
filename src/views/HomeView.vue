@@ -160,7 +160,8 @@
                 TA’s and presenters can be moved to the front of the class.
               </div>
               <div class="subglobal__desc">
-                Teachers can easily see all students and class data at one time. </div>
+                Teachers can easily see all students and class data at one time.
+              </div>
             </div>
           </div>
           <div class="feature__img">
@@ -175,7 +176,8 @@
               </div>
               <div class="subglobal__desc">
                 Class has a dynamic set of teaching tools built to be deployed and used during class.
-                Teachers can handout assignments in real-time for students to complete and submit. </div>
+                Teachers can handout assignments in real-time for students to complete and submit.
+              </div>
             </div>
           </div>
           <div class="feature__img">
@@ -186,10 +188,12 @@
           <div class="feature__content">
             <div class="subglobal">
               <div class="subglobal__heading">
-                Assessments, <span>Quizzes</span>, Tests </div>
+                Assessments, <span>Quizzes</span>, Tests
+              </div>
               <div class="subglobal__desc">
                 Easily launch live assignments, quizzes, and tests.
-                Student results are automatically entered in the online gradebook. </div>
+                Student results are automatically entered in the online gradebook.
+              </div>
 
             </div>
           </div>
@@ -253,7 +257,8 @@
           <span>NEWS</span>
           <div class="blog__content">
             <div class="blog__title">
-              Class adds $30 million to its balance sheet for a Zoom-friendly edtech solution </div>
+              Class adds $30 million to its balance sheet for a Zoom-friendly edtech solution
+            </div>
             <div class="blog__desc">
               Class, launched less than a year ago by Blackboard co-founder Michael Chasen, integrates exclusively...
             </div>
@@ -309,25 +314,24 @@
   </section>
 
 
-
 </template>
 
 <script setup lang="ts">
-import facebook from "../assets/img/facebook.svg"
-import google from "../assets/img/google.svg"
-import netflix from "../assets/img/netflix.svg"
-import amazon from "../assets/img/amazon.svg"
-import grab from "../assets/img/grab.svg"
-import airhub from "../assets/img/airbnb.svg"
-import questionone from "../assets/img/img1.png"
-import group from "../assets/img/img2.png";
-import room from "../assets/img/img3.png";
-import chat from "../assets/img/img4.png";
-import learn from "../assets/img/img5.png";
-import quizz from "../assets/img/img6.png";
-import book from "../assets/img/img7.png";
-import blog from "../assets/img/Group 40.png";
-import one from "../assets/img/img8.png";
+  import facebook from '../assets/img/facebook.svg'
+  import google from '../assets/img/google.svg'
+  import netflix from '../assets/img/netflix.svg'
+  import amazon from '../assets/img/amazon.svg'
+  import grab from '../assets/img/grab.svg'
+  import airhub from '../assets/img/airbnb.svg'
+  import questionone from '../assets/img/img1.png'
+  import group from '../assets/img/img2.png'
+  import room from '../assets/img/img3.png'
+  import chat from '../assets/img/img4.png'
+  import learn from '../assets/img/img5.png'
+  import quizz from '../assets/img/img6.png'
+  import book from '../assets/img/img7.png'
+  import blog from '../assets/img/Group 40.png'
+  import one from '../assets/img/img8.png'
 
 
 </script>

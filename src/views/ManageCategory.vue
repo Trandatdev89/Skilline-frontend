@@ -1,8 +1,8 @@
 <template>
   <div class="category">
-    <div class="category__add" style="float: right;margin: 15px 0">
-      <el-button @click="handleShowCreateCate">
-        Add Multiple Course
+    <div class="category__add" style="float: right;margin:25px 0">
+      <el-button @click="handleShowCreateCate" :icon="CirclePlus">
+        Thêm danh mục
       </el-button>
     </div>
     <div class="category__table">
@@ -57,7 +57,7 @@
   import type { FormInstance } from 'element-plus'
   import AlertService from '@/service/AlertService.ts'
   import CategoryApi from '@/api/CategoryApi.ts'
-  import { RefreshLeft } from '@element-plus/icons-vue'
+  import { RefreshLeft,CirclePlus} from '@element-plus/icons-vue'
   import { useRoute } from 'vue-router'
   import type { RequestParam } from '@/type/RequestParam.ts'
   import FormSaveCategory from '@/components/form/FormSaveCategory.vue'

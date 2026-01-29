@@ -13,12 +13,18 @@ const useCategory = () => {
     listCategory.value = data.value
   }
 
+  const getListCategories = async () => {
+    await loadMoreData(CategoryApi.getListCategoryPagination.bind(CategoryApi));
+    listCategory.value = data.value
+  }
+
   return {
     //state
     listCategory,
 
     //action
-    getListCategory
+    getListCategory,
+    getListCategories
   }
 }
 

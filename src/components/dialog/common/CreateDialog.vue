@@ -5,6 +5,7 @@
              style="position: relative;overflow-y: auto"
              class="common-dialog"
              :style="{ maxHeight: `${heightDialog}px`}"
+             @close="hide"
   >
     <template #header>
          <span>

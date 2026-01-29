@@ -14,6 +14,7 @@ const useLoadMore = () => {
   const data = ref<any>([])
 
   const loadMoreData = async (requestApi: (req: RequestParam) => Promise<ApiResponse<any>>) => {
+
     try {
       if (isLoading.value || !hasMore.value) {
         return
@@ -21,8 +22,7 @@ const useLoadMore = () => {
 
       isLoading.value = true
       const response: ApiResponse<any> = await requestApi(request)
-      console.log("abc");
-
+      console.log(response)
       if (response.code !== 200) {
         throw new Error(response.message)
       }
@@ -36,7 +36,17 @@ const useLoadMore = () => {
       isLoading.value = false
     } catch (e: any) {
       AlertService.error('Error', e)
+    }finally {
+      isLoading.value = false
     }
+  }
+
+  const resetLoadMore = ()=>{
+    isLoading.value = false;
+    hasMore.value = true;
+    request.page = 1;
+    request.size = 10;
+    data.value = [];
   }
 
   return {
@@ -44,7 +54,8 @@ const useLoadMore = () => {
     loadMoreData,
     isLoading,
     hasMore,
-    request
+    request,
+    resetLoadMore
   }
 }
 

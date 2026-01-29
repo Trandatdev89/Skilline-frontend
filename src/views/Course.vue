@@ -16,20 +16,18 @@
             <div class="filter-group">
               <label class="filter-label">Tìm kiếm khóa học</label>
               <el-input
-                  v-model="filters.searchTitle"
+                  v-model="filters.title"
                   placeholder="Nhập tên khóa học..."
                   :prefix-icon="Search"
                   clearable
-                  @input="applyFilters"
               />
             </div>
 
-            <!-- Category Filter -->
             <div class="filter-group">
               <label class="filter-label">Danh mục</label>
-              <el-radio-group v-model="filters.categories" @change="applyFilters">
+              <el-radio-group v-model="filters.categoryId">
                 <el-radio
-                    v-for="item in category"
+                    v-for="item in listCategory"
                     :key="item.id"
                     :label="item.id"
                     class="category-checkbox"
@@ -39,43 +37,59 @@
               </el-radio-group>
             </div>
 
-            <!-- Price Filter -->
             <div class="filter-group">
-              <label class="filter-label">Khoảng giá</label>
-              <el-radio-group v-model="filters.priceRange" @change="applyFilters">
-                <el-radio label="all" class="price-radio">Tất cả</el-radio>
-                <el-radio label="free" class="price-radio">Miễn phí</el-radio>
-                <el-radio label="under-500k" class="price-radio">Dưới 500,000đ</el-radio>
-                <el-radio label="500k-1m" class="price-radio">500,000đ - 1,000,000đ</el-radio>
-                <el-radio label="1m-2m" class="price-radio">1,000,000đ - 2,000,000đ</el-radio>
-                <el-radio label="above-2m" class="price-radio">Trên 2,000,000đ</el-radio>
-              </el-radio-group>
+              <label class="filter-label">Cấp độ</label>
+              <el-select
+                  v-model="filters.level"
+                  filterable
+                  placeholder="Chọn cấp độ"
+                  style="width: 100%"
+                  clearable
+              >
+                <el-option
+                    v-for="item in levelOptions"
+                    :key="item.key"
+                    :label="item.label"
+                    :value="item.value"
+                />
+              </el-select>
             </div>
+
 
             <!-- Custom Price Range -->
             <div class="filter-group">
               <label class="filter-label">Hoặc tùy chỉnh giá</label>
               <div class="price-inputs">
                 <el-input-number
-                    v-model="filters.minPrice"
+                    v-model="filters.priceStart"
                     :min="0"
-                    :max="10000000"
-                    :step="100000"
                     placeholder="Từ"
                     controls-position="right"
-                    @change="applyFilters"
                 />
                 <span class="price-separator">-</span>
                 <el-input-number
-                    v-model="filters.maxPrice"
+                    v-model="filters.priceEnd"
                     :min="0"
-                    :max="10000000"
-                    :step="100000"
                     placeholder="Đến"
                     controls-position="right"
-                    @change="applyFilters"
                 />
               </div>
+            </div>
+
+
+            <div class="filter-group">
+              <label class="filter-label">Đánh giá</label>
+              <el-radio-group @change="applyFilters">
+                <el-radio
+                    v-for="item in rateOptions"
+                    :key="item.key"
+                    :value="item.key"
+                    :label="item.label"
+                    class="price-radio"
+                >
+                  {{ item.label }}
+                </el-radio>
+              </el-radio-group>
             </div>
 
             <!-- Reset Button -->
@@ -85,7 +99,9 @@
                 class="reset-btn"
                 @click="resetFilters"
             >
-              <el-icon><RefreshLeft /></el-icon>
+              <el-icon>
+                <RefreshLeft />
+              </el-icon>
               Xóa bộ lọc
             </el-button>
           </div>
@@ -94,8 +110,8 @@
         <!-- Course Grid -->
         <main class="course-content">
           <div class="result-header">
-            <span class="result-count">Tìm thấy {{ filteredCourses.length }} khóa học</span>
-            <el-select v-model="sortBy" placeholder="Sắp xếp" class="sort-select" @change="applySorting">
+            <span class="result-count">Tìm thấy 0 khóa học</span>
+            <el-select placeholder="Sắp xếp" class="sort-select" @change="applySorting">
               <el-option label="Mới nhất" value="newest" />
               <el-option label="Giá thấp đến cao" value="price-asc" />
               <el-option label="Giá cao đến thấp" value="price-desc" />
@@ -103,19 +119,19 @@
             </el-select>
           </div>
 
-          <div class="course-grid" v-if="filteredCourses.length > 0">
-            <template v-for="course in filteredCourses" :key="course.id">
-              <CardUi
-                  @click="handleToLecture(course.id)"
-                  :img="course?.thumbnail_url"
-                  :title="course.title"
-                  :content-course="course"
-              />
-            </template>
-          </div>
+                    <div class="course-grid" v-if="listCourse.length > 0">
+                      <template v-for="course in listCourse" :key="course.id">
+                        <CardUi
+                            @click="handleToLecture(course.id)"
+                            :img="course?.thumbnail_url"
+                            :title="course.title"
+                            :content-course="course"
+                        />
+                      </template>
+                    </div>
 
           <el-empty
-              v-else
+
               description="Không tìm thấy khóa học phù hợp"
               :image-size="200"
           />
@@ -127,144 +143,109 @@
 
 <script setup lang="ts">
   import { useRoute, useRouter } from 'vue-router'
-  import CourseApi from '@/api/CourseApi.js'
-  import { onMounted, ref, computed } from 'vue'
-  import CardUi from '@/components/card/CardUi.vue'
-  import { Search, RefreshLeft } from '@element-plus/icons-vue'
-  import Category from '@/views/Category.vue'
-  import CategoryApi from '@/api/CategoryApi.ts'
+  import { onMounted, reactive, watch } from 'vue'
+  import { RefreshLeft, Search } from '@element-plus/icons-vue'
+  import useCourse from '@/composable/useCourse.ts'
+  import useCategory from '@/composable/useCategory.ts'
+  import LevelStudent from '@/enums/LevelStudent.ts'
+  import CardUi from "@/components/card/CardUi.vue";
 
-  const route = useRoute()
-  const router = useRouter()
 
-  const categoryId: any = route.query.categoryId || null
-  const listCourse = ref<any>([])
-  const sortBy = ref('newest')
-
-  // Filter state
-  const filters = ref({
-    searchTitle: '',
-    categories: [],
-    priceRange: 'all',
-    minPrice: null,
-    maxPrice: null
-  })
-
-  // Mock categories - thay thế bằng API thực tế
-  const category = ref<any>([])
-
-  const getListCourse = async () => {
-    let res
-    if (categoryId) {
-      res = await CourseApi.getListCourseByCategoryId(categoryId)
-      filters.value.categories = [parseInt(categoryId)]
-    } else {
-      res = await CourseApi.getListCourseNotPagi()
-    }
-    listCourse.value = res.data
+  export interface SearchCourse {
+    title: string,
+    level: string,
+    categoryId: number | null,
+    priceStart: number | null,
+    priceEnd: number | null,
+    rateStart: number | null,
+    rateEnd: number | null,
+    discount: number | null,
+    price: number | null
   }
 
-  const filteredCourses = computed(() => {
-    let result = [...listCourse.value]
+  const router = useRouter()
+  const { listCourse, getListCourse, searchCourse } = useCourse()
+  const { listCategory, getListCategories } = useCategory()
 
-    // Filter by title
-    if (filters.value.searchTitle) {
-      const searchTerm = filters.value.searchTitle.toLowerCase()
-      result = result.filter(course =>
-          course.title.toLowerCase().includes(searchTerm)
-      )
-    }
+  const rateOptions = [
+    { key: 1, label: '1 sao trở lên' },
+    { key: 2, label: '2 sao trở lên' },
+    { key: 3, label: '3 sao trở lên' },
+    { key: 4, label: '4 sao trở lên' },
+    { key: 5, label: '5 sao trở lên' }
+  ]
 
-    // Filter by categories
-    if (filters.value.categories.length > 0) {
-      console.log("oki",filters.value.categories)
-      result = result.filter(course =>
-          filters.value.categories.includes(course.categoryId)
-      )
-    }
+  const levelOptions = [
+    { key: 1, label: 'Người mới', value: LevelStudent.BEGINNER },
+    { key: 2, label: 'Chuyên gia', value: LevelStudent.ADVANCE },
+    { key: 3, label: 'Tất cả', value: null }
+  ]
 
-    // Filter by price range
-    if (filters.value.priceRange !== 'all') {
-      result = result.filter(course => {
-        const price = course.price || 0
-        switch (filters.value.priceRange) {
-          case 'free':
-            return price === 0
-          case 'under-500k':
-            return price > 0 && price < 500000
-          case '500k-1m':
-            return price >= 500000 && price <= 1000000
-          case '1m-2m':
-            return price > 1000000 && price <= 2000000
-          case 'above-2m':
-            return price > 2000000
-          default:
-            return true
-        }
-      })
-    }
-
-    // Filter by custom price range
-    if (filters.value.minPrice !== null || filters.value.maxPrice !== null) {
-      result = result.filter(course => {
-        const price = course.price || 0
-        const min = filters.value.minPrice || 0
-        const max = filters.value.maxPrice || Infinity
-        return price >= min && price <= max
-      })
-    }
-
-    return result
+  // Filter state
+  const filters = reactive<SearchCourse>({
+    title: '',
+    level: '',
+    categoryId: null,
+    priceStart: null,
+    priceEnd: null,
+    rateStart: null,
+    rateEnd: null,
+    discount: null,
+    price: null
   })
 
-  const applyFilters = (value:any) => {
-     console.log(filters.value);
+  const applyFilters = (value: number) => {
+    console.log(value)
+    // Xử lý price range từ radio buttons
+    switch (value) {
+      case 1:
+        filters.rateStart = 1
+        filters.rateEnd = 5
+        break
+      case 2:
+        filters.rateStart = 2
+        filters.rateEnd = 5
+        break
+      case 3:
+        filters.rateStart = 3
+        filters.rateEnd = 5
+        break
+      case 4:
+        filters.rateStart = 4
+        filters.rateEnd = 5
+        break
+      case 5:
+        filters.rateStart = 5
+        filters.rateEnd = 5
+        break
+      default:
+        filters.rateStart = null
+        filters.rateEnd = null
+        break
+    }
   }
 
   const applySorting = () => {
-    const courses = [...filteredCourses.value]
 
-    switch (sortBy.value) {
-      case 'price-asc':
-        courses.sort((a, b) => (a.price || 0) - (b.price || 0))
-        break
-      case 'price-desc':
-        courses.sort((a, b) => (b.price || 0) - (a.price || 0))
-        break
-      case 'name-asc':
-        courses.sort((a, b) => a.title.localeCompare(b.title))
-        break
-      case 'newest':
-      default:
-        courses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    }
-
-    listCourse.value = courses
   }
 
   const resetFilters = () => {
-    filters.value = {
-      searchTitle: '',
-      categories: categoryId ? [parseInt(categoryId)] : [],
-      priceRange: 'all',
-      minPrice: null,
-      maxPrice: null
-    }
-    sortBy.value = 'newest'
+
   }
 
   const handleToLecture = (courseId: number) => {
     router.push(`/lecture?courseId=${courseId}`)
   }
 
-  const getListCategory = async ()=>{
-    const  res = await CategoryApi.getListCategory();
-    category.value = res.data;
-  }
-
   onMounted(() => {
-    getListCourse();
-    getListCategory();
+    getListCourse()
+    getListCategories()
+  })
+
+  watch(filters, (newValue) => {
+    if (newValue) {
+      searchCourse(newValue)
+    }
   })
 </script>
 

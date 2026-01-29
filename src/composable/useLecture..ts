@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import useLoadMore from '@/composable/useLoadMore.ts'
 import LectureApi from '@/api/LectureApi.ts'
 import type { RequestParam } from '@/type/RequestParam.ts'
+import AlertService from '@/service/AlertService.ts'
 
 const useLecture= ()=>{
 
@@ -16,11 +17,24 @@ const useLecture= ()=>{
     listLectureOfCourse.value = data.value;
   }
 
+  const saveLectureByCourseId = async (formData:any)=>{
+    try {
+      const res = await LectureApi.saveLecturesByCourseId(formData)
+      if (res.code !== 200) {
+        throw res.message
+      }
+      AlertService.success('Success', res.message)
+    } catch (error: any) {
+      AlertService.error('Error', error)
+    }
+  }
+
   return {
     listLectureOfCourse,
 
     //action
-    getListLectureByCourseId
+    getListLectureByCourseId,
+    saveLectureByCourseId
   }
 }
 

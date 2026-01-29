@@ -107,7 +107,6 @@
 
   watchEffect(async () => {
     await getListCourse()
-    console.log(listQuizOfLecture.value)
   })
 
   watch(() => selectArgumentOfQuiz.courseIdSelected, async (newValue) => {
@@ -121,8 +120,7 @@
 <style scoped lang="scss">
   .order {
     &__add {
-      margin-top: 50px;
-      margin-bottom: 20px;
+      margin:25px 0;
     }
   }
 </style>

@@ -36,7 +36,7 @@
      border: 1px solid #333333;
      position: relative;
      border-radius: 5px;
-     width: 400px !important;
+     width: 350px !important;
 
 
      &__icon{

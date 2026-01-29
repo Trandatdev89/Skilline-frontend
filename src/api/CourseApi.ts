@@ -14,6 +14,13 @@ class CourseApi {
     return await httpApi.get(`/api/course/all`,config);
   }
 
+  async getListCoursesMySelf(params?:any): Promise<ApiResponse<any>> {
+    const config = {
+      params: params ? params : {}
+    };
+    return await httpAuth.get(`/api/course/my-self`,config);
+  }
+
   async getListCourseNotPagi(): Promise<ApiResponse<any>> {
     return await httpApi.get(`/api/course/not-pagi`);
   }
@@ -28,6 +35,13 @@ class CourseApi {
 
   async deleteCourse(ids:number[]): Promise<ApiResponse<any>> {
     return await httpAuth.delete("/api/course/list/${ids}");
+  }
+
+  async searchCourse(params?:any): Promise<ApiResponse<any>> {
+    const config = {
+      params: params ? params : {}
+    };
+    return await httpApi.get("/api/course/search-advance",config);
   }
 }
 

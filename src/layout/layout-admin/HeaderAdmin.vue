@@ -1,14 +1,17 @@
 <template>
   <div class="headerAdmin">
-    <InputSearch class="headerAdmin__input"/>
+    <div style="font-size: 20px;font-weight: 500">{{pageTitle}}</div>
     <div class="headerAdmin__action">
+      <InputSearch class="headerAdmin__input" />
       <el-switch />
       <div class="notification">
-        <el-button :icon="Bell" style="font-size: 24px;border: none"/>
+        <el-button :icon="Bell" style="font-size: 24px;border: none" />
       </div>
-      <DropDownCustom avatar="https://static.vecteezy.com/system/resources/previews/002/002/403/non_2x/man-with-beard-avatar-character-isolated-icon-free-vector.jpg"
-                      :list-link="listLink"
-                      :title="userInfo.name"/>
+      <DropDownCustom
+          :avatar="userInfo.avatar ? userInfo.avatar
+          : 'https://static.vecteezy.com/system/resources/previews/002/002/403/non_2x/man-with-beard-avatar-character-isolated-icon-free-vector.jpg'"
+          :list-link="listLink"
+          :title="userInfo.name" />
     </div>
   </div>
 </template>
@@ -45,24 +48,32 @@
       role: [RoleType.USER, RoleType.ADMIN, RoleType.TEACHER]
     }
   ])
+  const {pageTitle} = defineProps<{
+    pageTitle:{
+      require:true,
+      type:String
+    }
+  }>();
 
   const { userInfo } = storeToRefs(useAuthentication())
 
 </script>
 
 <style scoped lang="scss">
-   .headerAdmin{
-     display: flex;
-     align-items: center;
-     justify-content: space-between;
-     gap: 20px;
-     padding-top: 10px;
+  .headerAdmin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid #dcdfe6;
+    padding: 10px 15px 10px 15px;
+    margin-bottom: 15px;
 
-     &__action{
-       width: auto;
-       display: flex;
-       align-items: center;
-       gap: 15px;
-     }
-   }
+    &__action {
+      width: auto;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+  }
 </style>

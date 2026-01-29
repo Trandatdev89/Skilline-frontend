@@ -1,5 +1,5 @@
 <template>
-  <header class="header">
+  <header :class="['header', { 'header__home': isHomePage }]">
     <div class="container">
       <div class="header__top">
         <div class="header__logo">
@@ -99,7 +99,7 @@
   import { Bell, ShoppingCart } from '@element-plus/icons-vue'
   import logo from '@/assets/img/logo.png'
   import girl from '@/assets/img/header-pic.png'
-  import { onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, watchEffect } from 'vue'
   import { RouterLink, useRoute } from 'vue-router'
   import useAuthentication from '@/stores/Authentication.ts'
   import DropDownCustom from '@/components/dropdown/DropDownCustom.vue'
@@ -147,6 +147,9 @@
     })
   }
 
+  const route = useRoute()
+  const isHomePage = computed(() => route.name === 'home' || route.path === '/')
+
   const listLink = ref<any>([
     {
       title: 'Trang quản lý',
@@ -183,8 +186,6 @@
     await loadMoreData(() => CategoryApi.getListCategoryPagination(request));
     listCategory.value = data.value;
   }
-
-
 
 </script>
 

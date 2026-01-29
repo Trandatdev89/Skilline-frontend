@@ -11,7 +11,8 @@ const useAuthentication = defineStore('useAuthentication', () => {
       userId: '',
       isAuthenticated: false,
       name: '',
-      role: ''
+      role: '',
+      avatar: null
     })
 
     const isLoading = ref<boolean>(false)
@@ -44,6 +45,7 @@ const useAuthentication = defineStore('useAuthentication', () => {
       userInfo.userId = ''
       userInfo.name = ''
       userInfo.role = ''
+      userInfo.avatar = null
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
     }
@@ -55,13 +57,14 @@ const useAuthentication = defineStore('useAuthentication', () => {
       userInfo.userId = value.userId
       userInfo.name = value.username
       userInfo.role = value.role
+      userInfo.avatar = value.avatar
     }
 
     const logout = () => {
-      isLoading.value = true;
-      resetUserInfo();
-      localStorage.removeItem('userInfo');
-      isLoading.value = false;
+      isLoading.value = true
+      resetUserInfo()
+      localStorage.removeItem('userInfo')
+      isLoading.value = false
     }
 
     return { userInfo, isAuthentication, logout, setAuthToken, isLoading }

@@ -1,6 +1,7 @@
 <template>
   <div class="data-table">
     <el-table v-if="data"
+              :max-height="tableMaxHeight"
               :data="data"
               ref="tableRef"
               @sort-change="handleSortChange"
@@ -23,7 +24,7 @@
 <script lang="ts" setup>
 
 
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref } from 'vue'
   import AlertService from '@/service/AlertService.ts'
   import type { RequestParam } from '@/type/RequestParam.ts'
 
@@ -53,6 +54,10 @@
       required: false,
       default: true
     }
+  })
+
+  const tableMaxHeight = computed(() => {
+    return window.innerHeight - 220
   })
 
   const getData = async () => {
