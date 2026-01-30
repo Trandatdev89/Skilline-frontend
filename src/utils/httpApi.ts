@@ -5,6 +5,7 @@ const createApiRequest = (baseUrl: string) => {
   const request = axios.create({
     timeout: timeOut,
     baseURL: baseUrl,
+    withCredentials:true,
     headers: {
       'X-Requested-With': 'XMLHttpRequest'
     }
