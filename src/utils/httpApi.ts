@@ -25,16 +25,28 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
     }
   })
 
-  request.interceptors.request.use(
-    (config) => {
-      const csrfToken = getCookie('XSRF-TOKEN')
-      if (csrfToken) {
-        config.headers['X-XSRF-TOKEN'] = csrfToken
-      }
-      return config
-    },
-    (error) => Promise.reject(error)
-  )
+  request.interceptors.request.use((config: any) => {
+
+    const deviceFingerprint = localStorage.getItem('deviceFingerprint')
+    if (deviceFingerprint) {
+      config.headers['X-Device-Fingerprint'] = deviceFingerprint
+    }
+
+    const csrfToken = getCookie('XSRF-TOKEN')
+    if (csrfToken) {
+      config.headers['X-XSRF-TOKEN'] = csrfToken
+    }
+
+    config.headers = {
+      ...config.headers,
+      'content-type': 'application/json',
+      'accept': 'application/json'
+    }
+    return config
+  }, (error) => {
+    console.log(error)
+    return error.response.data
+  })
 
   request.interceptors.response.use((response: any) => {
     return response.data
@@ -52,7 +64,6 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
     }
     return Promise.reject(error)
   })
-
 
   return request
 }

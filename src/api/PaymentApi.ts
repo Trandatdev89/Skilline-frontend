@@ -3,10 +3,10 @@ import { httpApi } from '@/utils/httpApi.ts'
 
 class PaymentApi {
 
-  async vnPayment(params:  any): Promise<ApiResponse<any>> {
+  async vnPayment(params: any): Promise<ApiResponse<any>> {
     const config = {
       params: params ? params : {}
-    };
+    }
     return await httpApi.get('/api/payment', config)
   }
 
@@ -14,4 +14,4 @@ class PaymentApi {
 
 
 const paymentApi = new PaymentApi()
-export default paymentApi;
+export default paymentApi
