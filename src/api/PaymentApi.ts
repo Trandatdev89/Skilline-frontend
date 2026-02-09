@@ -1,5 +1,5 @@
-import { httpAuth } from '@/utils/httpAuth.ts'
 import type { ApiResponse } from '@/type/ApiResponse.ts'
+import { httpApi } from '@/utils/httpApi.ts'
 
 class PaymentApi {
 
@@ -7,7 +7,7 @@ class PaymentApi {
     const config = {
       params: params ? params : {}
     };
-    return await  httpAuth.get("/api/payment",config)
+    return await httpApi.get('/api/payment', config)
   }
 
 }

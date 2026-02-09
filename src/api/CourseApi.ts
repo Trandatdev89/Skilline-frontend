@@ -1,5 +1,4 @@
 import type { ApiResponse } from '@/type/ApiResponse.ts'
-import { httpAuth } from '@/utils/httpAuth.ts'
 import { httpApi } from '@/utils/httpApi.ts'
 
 class CourseApi {
@@ -18,7 +17,7 @@ class CourseApi {
     const config = {
       params: params ? params : {}
     };
-    return await httpAuth.get(`/api/course/my-self`,config);
+    return await httpApi.get(`/api/course/my-self`, config)
   }
 
   async getListCourseNotPagi(): Promise<ApiResponse<any>> {
@@ -30,11 +29,11 @@ class CourseApi {
   }
 
   async saveCourse(data:any): Promise<ApiResponse<any>> {
-    return await httpAuth.post("/api/course/save",data);
+    return await httpApi.post('/api/course/save', data)
   }
 
   async deleteCourse(ids:number[]): Promise<ApiResponse<any>> {
-    return await httpAuth.delete("/api/course/list/${ids}");
+    return await httpApi.delete('/api/course/list/${ids}')
   }
 
   async searchCourse(params?:any): Promise<ApiResponse<any>> {

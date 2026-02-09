@@ -1,5 +1,4 @@
 import type { ApiResponse } from '@/type/ApiResponse'
-import type { TokenRes } from '@/type/TokenRes.ts'
 import { httpApi } from '@/utils/httpApi.ts'
 import type { TokenType } from '@/enums/TokenType.ts'
 
@@ -14,7 +13,7 @@ class AuthenticationApi {
     return response
   }
 
-  async checkAuthentication(tokenType:TokenType): Promise<ApiResponse<any>> {
+  async checkAuthentication(tokenType: TokenType): Promise<ApiResponse<any>> {
     return await httpApi.get(`/auth/introspect-token?tokenType=${tokenType}`)
   }
 
@@ -26,9 +25,14 @@ class AuthenticationApi {
     return await httpApi.get(`/auth/forgot-password?email=${email}`)
   }
 
-  async refreshToken(tokenRequest: any): Promise<ApiResponse<any>> {
-    return await httpApi.post('/auth/refresh-token', tokenRequest)
+  async refreshToken(): Promise<ApiResponse<any>> {
+    return await httpApi.get('/auth/refresh-token')
   }
+
+  async getUserInfo(): Promise<ApiResponse<any>> {
+    return await httpApi.get('/auth/me')
+  }
+
 
 }
 

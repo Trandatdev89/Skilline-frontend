@@ -1,11 +1,11 @@
-import { httpAuth } from '@/utils/httpAuth.ts'
 import type { ApiResponse } from '@/type/ApiResponse.ts'
+import { httpApi } from '@/utils/httpApi.ts'
 
 const BASE_URL='/api/config';
 
 class TemplateMailApi{
   async saveTemplateMail(formData:any):Promise<ApiResponse<any>>{
-    return httpAuth.post(`${BASE_URL}/save-template-mail`,formData)
+    return httpApi.post(`${BASE_URL}/save-template-mail`, formData)
   }
 }
 

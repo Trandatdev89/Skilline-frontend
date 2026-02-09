@@ -1,11 +1,11 @@
-import { httpAuth } from '@/utils/httpAuth.ts'
 import type { ApiResponse } from '@/type/ApiResponse.ts'
+import { httpApi } from '@/utils/httpApi.ts'
 
 const apiPrefixQuiz = "/api/question";
 class QuestionApi {
 
   async saveQuestion(formData: any): Promise<ApiResponse<any>> {
-    return await httpAuth.post(`${apiPrefixQuiz}`,formData);
+    return await httpApi.post(`${apiPrefixQuiz}`, formData)
   }
 
 }

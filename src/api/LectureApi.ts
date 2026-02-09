@@ -1,11 +1,10 @@
 import type { ApiResponse } from '@/type/ApiResponse.ts'
-import { httpAuth } from '@/utils/httpAuth.ts'
 import { httpApi } from '@/utils/httpApi.ts'
 
 class LectureApi{
 
   async getLectureById(lectureId:any): Promise<ApiResponse<any>>{
-    return await httpAuth.get(`/api/lecture/stream/${lectureId}`);
+    return await httpApi.get(`/api/lecture/stream/${lectureId}`)
   }
 
   async getLecturesByCourseId(params:any): Promise<ApiResponse<any>>{
@@ -20,7 +19,7 @@ class LectureApi{
   }
 
   async saveLecturesByCourseId(data:any): Promise<ApiResponse<any>>{
-    return await httpAuth.post(`/api/lecture/save`,data);
+    return await httpApi.post(`/api/lecture/save`, data)
   }
 
 }
