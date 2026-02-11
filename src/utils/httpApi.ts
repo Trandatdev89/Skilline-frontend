@@ -32,16 +32,14 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
       config.headers['X-Device-Fingerprint'] = deviceFingerprint
     }
 
+    // const csrfToken = localStorage.getItem('X-XSRF-TOKEN')
+
     const csrfToken = getCookie('XSRF-TOKEN')
+    console.log('🔍 CSRF Token từ cookie:', csrfToken)
     if (csrfToken) {
       config.headers['X-XSRF-TOKEN'] = csrfToken
     }
 
-    config.headers = {
-      ...config.headers,
-      'content-type': 'application/json',
-      'accept': 'application/json'
-    }
     return config
   }, (error) => {
     console.log(error)

@@ -24,7 +24,7 @@ const useAuthentication = defineStore('useAuthentication', () => {
         if (res?.code !== 200) {
           throw new Error(res.message)
         }
-        return true
+        return res.data
       } catch (e) {
         resetUserInfo()
         return false

@@ -3,7 +3,7 @@
     <div style="font-size: 20px;font-weight: 500">{{pageTitle}}</div>
     <div class="headerAdmin__action">
       <InputSearch class="headerAdmin__input" />
-      <el-switch />
+      <el-switch v-model="isDarkOrLightMode" @change="handleChangeMode" />
       <div class="notification">
         <el-button :icon="Bell" style="font-size: 24px;border: none" />
       </div>
@@ -25,6 +25,8 @@
   import { storeToRefs } from 'pinia'
   import useAuthentication from '@/stores/Authentication.ts'
   import { RoleType } from '@/enums/RoleType.ts'
+  import { TypeMode } from '@/enums/TypeMode.ts'
+  import UserApi from '@/api/UserApi.ts'
 
   const listLink = ref<any>([
     {
@@ -55,7 +57,16 @@
     }
   }>();
 
+  const isDarkOrLightMode = ref<TypeMode>(TypeMode.LIGHT)
+
   const { userInfo } = storeToRefs(useAuthentication())
+
+  const handleChangeMode = async (value: any) => {
+    if (value) {
+      const res = await UserApi.changeMail({ newEmail: 'abcd@gmail.com' })
+      console.log(res)
+    }
+  }
 
 </script>
 

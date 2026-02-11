@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 
-  import { onBeforeMount, onMounted, reactive, ref } from 'vue'
+  import { onMounted, reactive, ref } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import AuthenticationApi from '@/api/AuthenticationApi.ts'
   import useAuthentication from '@/stores/Authentication.ts'
@@ -111,13 +111,7 @@
     if (res) {
       redirectAfterLogin()
     }
-
   })
-
-  onBeforeMount(async () => {
-    await AuthenticationApi.getCsrfToken()
-  })
-
 </script>
 
 <style scoped lang="scss">

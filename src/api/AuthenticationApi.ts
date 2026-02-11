@@ -33,7 +33,7 @@ class AuthenticationApi {
     return await httpApi.get('/auth/me')
   }
 
-  async getCsrfToken(): Promise<ApiResponse<any>> {
+  async getCsrfToken() {
     return await httpApi.get('/auth/csrf-token')
   }
 
