@@ -7,11 +7,13 @@ import AlertService from '@/service/AlertService.ts'
 const useLecture= ()=>{
 
   const listLectureOfCourse = ref();
-  const { loadMoreData, data } = useLoadMore();
+  const { loadMoreData, data, resetLoadMore } = useLoadMore()
 
   const getListLectureByCourseId = async (courseId:number)=>{
+    resetLoadMore()
     await loadMoreData((req: RequestParam) => {
       req.courseId = courseId;
+      console.log('abc')
       return LectureApi.getLecturesByCourseId(req);
     });
     listLectureOfCourse.value = data.value;

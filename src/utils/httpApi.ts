@@ -1,10 +1,13 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import AlertService from '@/service/AlertService.ts'
 import AuthenticationApi from '@/api/AuthenticationApi.ts'
+import { useRouter } from 'vue-router'
 
 
 const timeOut = 1000 * 60 * 5
+let isRefreshing = false
+let failedQueue: { resolve: (value?: any) => void; reject: (reason?: any) => void }[] = []
 
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`
@@ -14,6 +17,18 @@ function getCookie(name: string): string | null {
   }
   return null
 }
+
+const processQueue = (error: any) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve()
+    }
+  })
+  failedQueue = []
+}
+
 
 const createApiRequest = (baseUrl: any): AxiosInstance => {
   const request = axios.create({
@@ -25,14 +40,14 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
     }
   })
 
+  const router = useRouter()
+
   request.interceptors.request.use((config: any) => {
 
     const deviceFingerprint = localStorage.getItem('deviceFingerprint')
     if (deviceFingerprint) {
       config.headers['X-Device-Fingerprint'] = deviceFingerprint
     }
-
-    // const csrfToken = localStorage.getItem('X-XSRF-TOKEN')
 
     const csrfToken = getCookie('XSRF-TOKEN')
     console.log('🔍 CSRF Token từ cookie:', csrfToken)
@@ -42,25 +57,74 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
 
     return config
   }, (error) => {
-    console.log(error)
-    return error.response.data
+    return Promise.reject(error)
   })
 
   request.interceptors.response.use((response: any) => {
     return response.data
   }, async (error) => {
-    if (error && error.response.status === 401) {
 
-      const response = await AuthenticationApi.refreshToken()
-      if (response.code === 200) {
-        AlertService.success('Success', 'Refresh token' + response.data)
+    console.log(error)
+    const originalRequest: AxiosRequestConfig & { _retry?: boolean } = error.config
+
+    originalRequest._retry = originalRequest._retry ?? false
+
+    console.log(originalRequest)
+    console.log(originalRequest._retry)
+    // retry có tác dụng là tránh viêc gọi refresh-token vô hạn ,kiểu như refresh thất bại nếu
+    // không có retry sẽ call api mãi mãi có nó nếu thất bại reject ném về login luôn
+
+    if (error.response?.status === 1012 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Nếu đang refresh rồi thì cho request vào hàng chờ
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        })
+          .then(() => request(originalRequest))
+          .catch((err) => Promise.reject(err))
+
       }
-    } else if (error && error.response.status === 423) {
-      AlertService.error('Error', 'Account is login from device other')
-    } else if (error && error.response.status === 403) {
-      AlertService.error('Error', 'You cannot access resource this!')
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const response = await AuthenticationApi.refreshToken()
+        if (response.code === 200) {
+          processQueue(null)
+          return request(originalRequest) // retry request gốc
+        } else {
+          throw new Error('Refresh token failed')
+        }
+      } catch (refreshError) {
+        processQueue(refreshError)
+        AlertService.error('Session expired', 'Please login again')
+        await router.push('/login')
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
+
     }
+
+    // 423 - Account đăng nhập từ thiết bị khác
+    if (error.response?.status === 1019) {
+      AlertService.error('Error', 'Account is logged in from another device')
+      await router.push('/login')
+    }
+
+    // 403 - Forbidden
+    if (error.response?.status === 1013) {
+      AlertService.error('Error', 'You do not have permission to access this resource')
+    }
+
+    // 500 - Server error
+    if (error.response?.status === 9999) {
+      AlertService.error('Server Error', 'Something went wrong, please try again later')
+    }
+
     return Promise.reject(error)
+
   })
 
   return request

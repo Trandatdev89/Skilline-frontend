@@ -40,6 +40,10 @@
             :value="item.id"
         />
       </el-select>
+
+      <el-button @click="showFormAddQuiz" :icon="CirclePlus">
+        Thêm quiz
+      </el-button>
       <!--      <el-button @click="handleFilter">Filter</el-button>-->
     </div>
     <div class="order__table">
@@ -64,28 +68,60 @@
       </DataTable>
     </div>
   </div>
+
+  <CreateDialog ref="createDialog"
+                v-loading="loading"
+                :title="'Tạo mới quiz'"
+                text-btn-ok="Lưu"
+                :type-action="TypeAction.CREATE"
+                @create="handleCreateQuiz">
+    <FormAddQuiz v-model="dataQuizNeedSave" ref="formSaveQuiz" :lectureId=" selectArgumentOfQuiz.lectureIdSelected" />
+  </CreateDialog>
 </template>
 
 <script setup lang="ts">
 
   import DataTable from '@/components/datatable/DataTable.vue'
-  import { RefreshLeft, Search } from '@element-plus/icons-vue'
+  import { CirclePlus, RefreshLeft, Search } from '@element-plus/icons-vue'
   import useCourse from '@/composable/useCourse.ts'
-  import { reactive, watch, watchEffect } from 'vue'
+  import { reactive, ref, watch, watchEffect } from 'vue'
   import useLecture from '@/composable/useLecture..ts'
   import useQuiz from '@/composable/useQuiz.ts'
   import QuizApi from '@/api/QuizApi.ts'
+  import { TypeAction } from '@/enums/TypeAction.ts'
+  import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
+  import FormAddQuiz from '@/views/admin/quiz/FormAddQuiz.vue'
+  import type { QuizReq } from '@/type/req/QuizReq.ts'
 
 
   const { listCourse, getListCourse } = useCourse()
   const { listLectureOfCourse, getListLectureByCourseId } = useLecture()
   const { listQuizOfLecture, getQuizByLectureId } = useQuiz()
+  const loading = ref<boolean>(false)
+  const formSaveQuiz = ref<typeof FormAddQuiz | null>(null)
+  const createDialog = ref()
 
   const selectArgumentOfQuiz = reactive({
     courseIdSelected: 1,
     keyword: '',
     lectureIdSelected: null
   })
+
+  const dataQuizNeedSave = reactive<QuizReq>({
+    id: null,
+    lectureId: selectArgumentOfQuiz.lectureIdSelected,
+    title: '',
+    desc: '',
+    maxAttempt: null
+  })
+
+  const handleCreateQuiz = () => {
+    console.log(dataQuizNeedSave)
+  }
+
+  const showFormAddQuiz = () => {
+    createDialog.value?.show()
+  }
 
   const updateCourse = (row: any) => {
 

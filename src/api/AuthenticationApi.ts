@@ -26,7 +26,7 @@ class AuthenticationApi {
   }
 
   async refreshToken(): Promise<ApiResponse<any>> {
-    return await httpApi.get('/auth/refresh-token')
+    return await httpApi.post('/auth/refresh-token')
   }
 
   async getUserInfo(): Promise<ApiResponse<any>> {

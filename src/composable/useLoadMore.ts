@@ -17,6 +17,7 @@ const useLoadMore = () => {
 
     try {
       if (isLoading.value || !hasMore.value) {
+        console.log('ngat ham ')
         return
       }
 

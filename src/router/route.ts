@@ -7,7 +7,6 @@ import Pages from '@/router/pages.ts'
 import pages from '@/router/pages.ts'
 import Login from '@/views/login/Login.vue'
 import Post from '@/views/Post.vue'
-import AuthenticationSecurity from '@/security/AuthenticationSecurity.ts'
 import Fobiden from '@/views/errorPage/Fobiden.vue'
 import Course from '@/views/Course.vue'
 import Lecture from '@/views/Lecture.vue'
@@ -24,7 +23,7 @@ import Setting from '@/views/admin/Setting.vue'
 import ManageLecture from '@/views/admin/ManageLecture.vue'
 import ManageCategory from '@/views/ManageCategory.vue'
 import Bought from '@/views/Bought.vue'
-import Order from '@/views/Order.vue';
+import Order from '@/views/Order.vue'
 import useAuthentication from '@/stores/Authentication.ts'
 import Info from '@/views/Info.vue'
 import ManageQuiz from '@/views/admin/ManageQuiz.vue'
@@ -153,11 +152,8 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some(item => item.meta.requireAuth)) {
 
     const authStore = useAuthentication();
-    const isAuth = await authStore.isAuthentication();
 
-    if (!isAuth) {
-      return next(pages.login.path)
-    }
+    console.log(authStore)
 
     try {
       const role = userInfo.role
