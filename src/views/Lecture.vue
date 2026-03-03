@@ -226,10 +226,7 @@
 
   onMounted(() => {
     getListLesson()
-
-    if(accessToken){
-      checkUserEnrollment();
-    }
+    checkUserEnrollment();
   })
 </script>
 

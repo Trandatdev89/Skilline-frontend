@@ -14,11 +14,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeUnmount, watch } from 'vue'
-import videojs from 'video.js'
-import type Player from 'video.js/dist/types/player'
+  import { onBeforeUnmount, ref, watch } from 'vue'
+  import videojs from 'video.js'
+  import type Player from 'video.js/dist/types/player'
 
-const containerRef = ref<HTMLDivElement>()
+  const containerRef = ref<HTMLDivElement>()
 const player = ref<Player | null>(null)
 const visibility = ref<boolean>(false)
 let videoElement: HTMLVideoElement | null = null
@@ -81,7 +81,7 @@ const initPlayer = () => {
       responsive: true,
       height: 500, // cố định height
       sources: [{
-        src: `http://localhost:8080/api/lecture/stream/${props.videoId}/master.m3u8`,
+        src: `http://localhost:8080/api/file/stream/${props.videoId}/master.m3u8`,
         type: 'application/x-mpegURL'
       }]
     })

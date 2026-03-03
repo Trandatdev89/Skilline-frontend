@@ -174,7 +174,6 @@
     try {
       paymentLoading.value = true
       const responseOrder = await OrderApi.saveOrder(orderReq)
-      orderStore.updateOrder();
       if (responseOrder.code === 200) {
         const responsePaymentOnline = await PaymentApi.vnPayment({
           'orderId': parseInt(responseOrder?.data.id),
@@ -183,6 +182,7 @@
           'courses':orderReq.courseId
         })
         window.location.href = responsePaymentOnline?.url
+        orderStore.updateOrder();
       } else {
         AlertService.error('Thất bai!', 'Đơn hàng chưa được đặt')
       }
