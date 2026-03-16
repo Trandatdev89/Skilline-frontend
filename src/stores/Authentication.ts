@@ -46,7 +46,6 @@ const useAuthentication = defineStore('useAuthentication', () => {
         setAuthToken(res.data)
         lastFetchTime.value = now // ✅ Update cache time
         return true
-
       } catch (e) {
         resetUserInfo()
         return false
@@ -78,7 +77,7 @@ const useAuthentication = defineStore('useAuthentication', () => {
       isLoading.value = false
     }
 
-    return { userInfo, isAuthentication, logout, setAuthToken, isLoading, fetchCurrentInfoUser }
+    return { userInfo, isAuthentication, logout, setAuthToken, isLoading, fetchCurrentInfoUser, resetUserInfo }
   },
   {
     persist: {

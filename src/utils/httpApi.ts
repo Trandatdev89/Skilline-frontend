@@ -2,8 +2,7 @@ import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import AlertService from '@/service/AlertService.ts'
 import AuthenticationApi from '@/api/AuthenticationApi.ts'
-import { useRouter } from 'vue-router'
-
+import useAuthentication from '@/stores/Authentication.ts'
 
 const timeOut = 1000 * 60 * 5
 let isRefreshing = false
@@ -29,7 +28,6 @@ const processQueue = (error: any) => {
   failedQueue = []
 }
 
-
 const createApiRequest = (baseUrl: any): AxiosInstance => {
   const request = axios.create({
     baseURL: baseUrl,
@@ -39,8 +37,6 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
       'X-Requested-With': 'XMLHttpRequest'
     }
   })
-
-  const router = useRouter()
 
   request.interceptors.request.use((config: any) => {
 
@@ -98,8 +94,9 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
         }
       } catch (refreshError) {
         processQueue(refreshError)
+        useAuthentication().logout()
+        window.location.href = '/login'
         AlertService.error('Session expired', 'Please login again')
-        await router.push('/login')
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
@@ -109,8 +106,8 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
 
     // 423 - Account đăng nhập từ thiết bị khác
     if (error.response?.status === 1019) {
+      window.location.href = '/login'
       AlertService.error('Error', 'Account is logged in from another device')
-      await router.push('/login')
     }
 
     // 403 - Forbidden

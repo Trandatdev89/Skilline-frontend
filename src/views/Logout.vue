@@ -1,22 +1,21 @@
 <template>
-  <div style="text-align: center;margin-top: 50px" v-loading="loading">Đang đăng xuất</div>
+  <div style="text-align: center;margin-top: 50px" v-loading="isLoading">Đang đăng xuất</div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from 'vue'
-import useAuthentication from '@/stores/Authentication.ts'
-import AlertService from '@/service/AlertService.ts'
-import { useRouter } from 'vue-router'
-import UserApi from '@/api/UserApi.ts'
+  import { onMounted } from 'vue'
+  import useAuthentication from '@/stores/Authentication.ts'
+  import AlertService from '@/service/AlertService.ts'
+  import { useRouter } from 'vue-router'
+  import UserApi from '@/api/UserApi.ts'
 
-const router = useRouter()
-  const authentication = useAuthentication()
-  const loading = authentication.isLoading;
+  const router = useRouter()
+  const { logout, isLoading } = useAuthentication()
 
   const logoutAccount = async () => {
     const res = await UserApi.logout()
     if (res.code === 200) {
-      authentication.logout()
+      logout()
       await router.push('/login')
       AlertService.success('Thành công', 'Đăng xuất thành công')
     } else {

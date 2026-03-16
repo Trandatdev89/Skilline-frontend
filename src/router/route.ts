@@ -24,7 +24,6 @@ import ManageLecture from '@/views/admin/ManageLecture.vue'
 import ManageCategory from '@/views/ManageCategory.vue'
 import Bought from '@/views/Bought.vue'
 import Order from '@/views/Order.vue'
-import useAuthentication from '@/stores/Authentication.ts'
 import Info from '@/views/Info.vue'
 import ManageQuiz from '@/views/admin/ManageQuiz.vue'
 
@@ -148,12 +147,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const userInfo = useAuthentication().userInfo
+
+  // const authStore = useAuthentication();
+  // await authStore.fetchCurrentInfoUser(true);
+
   if (to.matched.some(item => item.meta.requireAuth)) {
 
-    const authStore = useAuthentication();
-
-    console.log(authStore)
+    // const userInfo = useAuthentication().userInfo;
 
     try {
       const role = userInfo.role
