@@ -19,7 +19,7 @@ app.use(pinia)
 app.use(ElementPlus)
 app.use(router)
 
-
 await AuthenticationApi.getCsrfToken()
 
 app.mount('#app')
+

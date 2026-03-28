@@ -26,6 +26,7 @@ import Bought from '@/views/Bought.vue'
 import Order from '@/views/Order.vue'
 import Info from '@/views/Info.vue'
 import ManageQuiz from '@/views/admin/ManageQuiz.vue'
+import useAuthentication from '@/stores/Authentication.ts'
 
 
 const router = createRouter({
@@ -106,7 +107,7 @@ const router = createRouter({
       component: LayoutAdmin,
       meta: {
         requireAuth: true,
-        roles: ['ADMIN','TEACHER']
+        roles: ['ADMIN', 'TEACHER']
       },
       children: [
         {
@@ -148,12 +149,12 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
 
-  // const authStore = useAuthentication();
-  // await authStore.fetchCurrentInfoUser(true);
+  const authStore = useAuthentication()
 
   if (to.matched.some(item => item.meta.requireAuth)) {
 
-    // const userInfo = useAuthentication().userInfo;
+    // await authStore.fetchCurrentInfoUser(true)
+    const userInfo = authStore.userInfo;
 
     try {
       const role = userInfo.role

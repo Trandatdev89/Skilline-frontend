@@ -60,13 +60,10 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
     return response.data
   }, async (error) => {
 
-    console.log(error)
     const originalRequest: AxiosRequestConfig & { _retry?: boolean } = error.config
 
     originalRequest._retry = originalRequest._retry ?? false
 
-    console.log(originalRequest)
-    console.log(originalRequest._retry)
     // retry có tác dụng là tránh viêc gọi refresh-token vô hạn ,kiểu như refresh thất bại nếu
     // không có retry sẽ call api mãi mãi có nó nếu thất bại reject ném về login luôn
 

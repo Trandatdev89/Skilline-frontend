@@ -159,7 +159,7 @@
     {
       title: 'Khóa học đã mua',
       url: '/bought',
-      role: RoleType.USER
+      role: [RoleType.ADMIN, RoleType.TEACHER,RoleType.USER]
     },
     {
       title: 'Thông tin cá nhân',
