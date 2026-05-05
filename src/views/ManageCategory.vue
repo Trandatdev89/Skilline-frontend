@@ -15,7 +15,7 @@
         <el-table-column prop="name" label="Tên danh mục" sortable />
         <el-table-column prop="isActive" label="Trạng thái">
           <template #default="scope">
-            <el-tag type="success" v-if="scope.row.isActive">Tồn tại</el-tag>
+            <el-tag type="success" v-if="scope.row.active">Tồn tại</el-tag>
             <el-tag type="danger" v-else>Đã xóa</el-tag>
           </template>
         </el-table-column>
@@ -72,18 +72,20 @@
 
 
   const category = reactive({
-    id: null,
+    id: null as number | null,
     title: '',
-    path: null as File | string | null,
-    imgPreview:null
+    assetId: null as string | null,
+    imgPreviewUrl: null as string | null
   })
 
   const updateCategory = (row: any) => {
     isEdit.value = true
     category.id = row.id
     category.title = row.name
-    category.path = row.urlThumbnail
-    createDialog.value?.show();
+    // Khi edit: set URL ảnh cũ để preview, assetId chỉ set lại khi user upload ảnh mới
+    category.imgPreviewUrl = row.urlThumbnail ?? null
+    category.assetId = row.thumbnailAssetId ?? null
+    createDialog.value?.show()
   }
 
   function handleShowCreateCate() {
@@ -100,24 +102,20 @@
     loading.value = true
 
     try {
-      const formData = new FormData()
-      if (category.id) {
-        formData.append('id', category.id)
-      }
-      if (category.path && category.path instanceof File) {
-        formData.append('path', category.path)
-      }
-      formData.append('name', category.title)
-
-      const res = await CategoryApi.save(formData)
+      // Gửi JSON — backend nhận assetId, không nhận file trực tiếp nữa
+      const res = await CategoryApi.save({
+        id: category.id ?? undefined,
+        name: category.title,
+        assetId: category.assetId ?? undefined
+      })
 
       if (res.code !== 200) {
         throw new Error(res.message)
       }
 
-      resetData();
+      resetData()
       createCateForm.value?.resetFields()
-      dataTable.value?.reload(dataTable.value?.request);
+      dataTable.value?.reload(dataTable.value?.request)
       createDialog.value?.hide()
 
       AlertService.success('Success', isEdit.value ? 'Cập nhật danh mục thành công!' : 'Thêm danh mục thành công!')
@@ -131,8 +129,9 @@
   const resetData = () => {
     isEdit.value = false
     category.id = null
-    category.path = null
     category.title = ''
+    category.assetId = null
+    category.imgPreviewUrl = null
   }
 
   const getListCategory = async (params: any) => {
@@ -159,4 +158,3 @@
 <style scoped lang="scss">
 
 </style>
-

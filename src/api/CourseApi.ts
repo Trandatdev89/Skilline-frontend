@@ -10,7 +10,7 @@ class CourseApi {
     const config = {
       params: params ? params : {}
     }
-    return await httpApi.get(`/api/course/all`, config)
+    return await httpApi.get(`/api/course`, config)
   }
 
   async getListCoursesMySelf(params?: any): Promise<ApiResponse<any>> {
@@ -29,7 +29,9 @@ class CourseApi {
   }
 
   async saveCourse(data: any): Promise<ApiResponse<any>> {
-    return await httpApi.post('/api/course/save', data)
+    return await httpApi.post('/api/course/save', data, {
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 
   async deleteCourse(ids: number[]): Promise<ApiResponse<any>> {

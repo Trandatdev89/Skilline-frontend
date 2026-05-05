@@ -21,8 +21,10 @@ class CategoryApi {
     });
   }
 
-  async save(data:any): Promise<ApiResponse<any>> {
-    return await httpApi.post(this.SUFFIX_URL, data)
+  async save(data: any): Promise<ApiResponse<any>> {
+    return await httpApi.post(this.SUFFIX_URL, data, {
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
 

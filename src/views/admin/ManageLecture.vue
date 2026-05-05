@@ -107,18 +107,26 @@
   const route = useRoute()
 
   const lecture = reactive({
-    id: null,
+    id: null as string | null,
     title: '',
     courseId: courseIdSelected.value,
-    videoFile: null
+    contentAssetId: null as string | null,
+    thumbnailAssetId: null as string | null,
+    durationSeconds: null as number | null,
+    previewable: false,
+    publishStatus: null as string | null
   })
 
   const updateCourse = (row: any) => {
-    isEdit.value = true;
+    isEdit.value = true
     lecture.id = row.id
     lecture.courseId = row.courseId
     lecture.title = row.title
-    lecture.videoFile = row.videoFile
+    lecture.contentAssetId = row.contentAssetId ?? null
+    lecture.thumbnailAssetId = row.thumbnailAssetId ?? null
+    lecture.durationSeconds = row.durationSeconds ?? null
+    lecture.previewable = row.previewable ?? false
+    lecture.publishStatus = row.publishStatus ?? null
     createDialog.value?.show()
   }
 
@@ -129,34 +137,35 @@
 
   const handleCreateLecture = async () => {
 
-    const isValid = formSaveLecture.value?.validate();
+    const isValid = formSaveLecture.value?.validate()
 
-    if(!isValid){
-      return;
+    if (!isValid) {
+      return
     }
 
     loading.value = true
-    try{
-      const formData = new FormData()
-
-      Object.keys(lecture).forEach((key) => {
-        let data = lecture[key as keyof typeof lecture]
-        if (data) {
-          formData.append(key, data as any)
-        }
+    try {
+      // Gửi JSON — backend nhận contentAssetId và thumbnailAssetId, không nhận file trực tiếp nữa
+      await saveLectureByCourseId({
+        id: lecture.id ?? undefined,
+        title: lecture.title,
+        courseId: lecture.courseId,
+        contentAssetId: lecture.contentAssetId ?? undefined,
+        thumbnailAssetId: lecture.thumbnailAssetId ?? undefined,
+        durationSeconds: lecture.durationSeconds ?? undefined,
+        previewable: lecture.previewable,
+        publishStatus: lecture.publishStatus ?? undefined
       })
 
-      await saveLectureByCourseId(formData);
-
-      resetData();
+      resetData()
       formSaveLecture.value?.resetFields()
       createDialog.value?.hide()
-      dataTable.value?.reload(dataTable.value?.request);
+      dataTable.value?.reload(dataTable.value?.request)
 
-    }catch(e){
-      console.log(e);
+    } catch (e) {
+      console.log(e)
     }
-    loading.value = false;
+    loading.value = false
   }
 
   const resetData = () => {
@@ -164,7 +173,11 @@
     lecture.id = null
     lecture.courseId = courseIdSelected.value
     lecture.title = ''
-    lecture.videoFile = null
+    lecture.contentAssetId = null
+    lecture.thumbnailAssetId = null
+    lecture.durationSeconds = null
+    lecture.previewable = false
+    lecture.publishStatus = null
   }
 
 
@@ -208,4 +221,3 @@
 <style scoped lang="scss">
 
 </style>
-

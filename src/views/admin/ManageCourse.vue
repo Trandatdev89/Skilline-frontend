@@ -27,23 +27,60 @@
           ref="dataTable"
           :get-data-function="getListCourse"
       >
-        <el-table-column prop="id" label="ID" />
+        <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="title" label="Tiêu đề" />
         <el-table-column prop="level" label="Cấp độ" />
-        <el-table-column prop="status" label="Trạng thái">
+        <el-table-column prop="publishStatus" label="Trạng thái">
           <template #default="scope">
-            <el-tag>
-              {{ scope.row.status }}
+            <el-tag :type="scope.row.publishStatus === 'PUBLISHER' ? 'success' : 'warning'">
+              {{ scope.row.publishStatus }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="price" label="Giá" />
-        <el-table-column prop="discount" label="Giảm giá" />
+        <el-table-column prop="priceOriginal" label="Giá gốc">
+          <template #default="scope">
+            {{ scope.row.priceOriginal?.toLocaleString('vi-VN') }}đ
+          </template>
+        </el-table-column>
+        <el-table-column prop="discount" label="Giảm giá">
+          <template #default="scope">
+            {{ scope.row.discount }}%
+          </template>
+        </el-table-column>
+        <el-table-column prop="priceDiscount" label="Giá sau giảm">
+          <template #default="scope">
+            {{ scope.row.priceDiscount?.toLocaleString('vi-VN') }}đ
+          </template>
+        </el-table-column>
         <el-table-column prop="rate" label="Đánh giá" />
-        <el-table-column prop="categoryName" label="Danh mục" />
-        <el-table-column prop="createAt" label="Ngày tạo" />
-        <el-table-column prop="updateAt" label="Ngày cập nhập" />
-        <el-table-column prop="action" label="Hành động">
+        <el-table-column prop="categoryId" label="Danh mục" />
+        <el-table-column prop="thumbnail_url" label="Ảnh">
+          <template #default="scope">
+            <el-image
+                v-if="scope.row.thumbnail_url"
+                style="width: 50px; height: 50px"
+                :src="scope.row.thumbnail_url"
+                fit="cover"
+            >
+              <template #error>
+                <div style="display:flex;align-items:center;justify-content:center;height:100%">
+                  <el-icon>
+                    <Picture />
+                  </el-icon>
+                </div>
+              </template>
+            </el-image>
+            <span v-else>—</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="accessDurationValue" label="Thời hạn">
+          <template #default="scope">
+            {{ scope.row.accessDurationValue }} {{ scope.row.expireUnit }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="createdAt" label="Ngày tạo" />
+        <el-table-column prop="updatedAt" label="Ngày cập nhật" />
+        <el-table-column label="Hành động" fixed="right" width="80">
           <template #default="scope">
             <el-button @click="updateCourse(scope.row)">
               <el-icon>
@@ -66,12 +103,12 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, onMounted, reactive, ref, watch, watchEffect } from 'vue'
+  import { nextTick, onMounted, reactive, ref, watch } from 'vue'
   import DataTable from '@/components/datatable/DataTable.vue'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
   import LevelStudent from '@/enums/LevelStudent.ts'
   import CourseApi from '@/api/CourseApi.ts'
-  import { RefreshLeft } from '@element-plus/icons-vue'
+  import { Picture, RefreshLeft } from '@element-plus/icons-vue'
   import useCourse from '@/composable/useCourse.ts'
   import useCategory from '@/composable/useCategory.ts'
   import { TypeAction } from '@/enums/TypeAction.ts'
@@ -80,7 +117,7 @@
   import { useRoute } from 'vue-router'
 
 
-  const dataTable = ref<InstanceType<typeof DataTable> | null>();
+  const dataTable = ref<InstanceType<typeof DataTable> | null>()
   const createDialog = ref()
 
   const loading = ref(false)
@@ -98,24 +135,27 @@
     desc: '',
     level: LevelStudent.BEGINNER,
     price: null,
-    thumbnail: null,
+    assetId: null,
+    thumbnailFile: null,
+    thumbnailPreviewUrl: null,
     categoryId: null,
     discount: null,
     rate: 5
   })
 
   const updateCourse = (row: any) => {
-    console.log(row)
     isEdit.value = true
     course.id = row.id
-    course.desc = row.description
-    course.price = row.price
+    course.desc = row.description         // API trả "description" không phải "desc"
+    course.price = row.priceOriginal      // API trả "priceOriginal" không phải "price"
     course.title = row.title
     course.level = row.level
     course.categoryId = row.categoryId
     course.rate = row.rate
     course.discount = Number(row.discount)
-    course.thumbnail = row.thumbnail_url
+    course.thumbnailPreviewUrl = row.thumbnail_url ?? null
+    course.assetId = row.thumbnailAssetId ?? null
+    course.thumbnailFile = null
     createDialog.value?.show()
   }
 
@@ -131,31 +171,28 @@
     }
     loading.value = true
 
-    try{
-      const formData = new FormData()
-
-      if (course.id) {
-        formData.append('id', String(course.id))
-      }
-      formData.append('title', course.title)
-      formData.append('desc', course.desc)
-      formData.append('level', course.level)
-      formData.append('price', String(course.price))
-      formData.append('categoryId', String(course.categoryId))
-      formData.append('rate', String(course.rate))
-      formData.append('discount', String(course.discount))
-      if (course.thumbnail && course.thumbnail instanceof File) {
-        formData.append('thumbnail', course.thumbnail)
-      }
-
-      await saveCourse(formData)
+    try {
+      // Gửi JSON thay vì FormData — backend nhận assetId, không nhận file trực tiếp nữa
+      await saveCourse({
+        id: course.id ?? undefined,
+        title: course.title,
+        description: course.desc,
+        level: course.level,
+        price: course.price,
+        categoryId: course.categoryId,
+        rate: course.rate,
+        discount: course.discount,
+        assetId: course.assetId ?? undefined
+      })
       formSaveCourse.value?.resetFields()
       createDialog.value?.hide()
       dataTable.value?.reload(dataTable.value?.request)
       resetData()
-    }catch(e){
-      console.log(e);
+    } catch (e) {
+      console.log(e)
     }
+
+    loading.value = false
   }
 
   const getListCourse = async (pageRequest: any) => {
@@ -192,17 +229,19 @@
     course.desc = ''
     course.level = LevelStudent.BEGINNER
     course.price = null
-    course.thumbnail = null
+    course.assetId = null
+    course.thumbnailFile = null
+    course.thumbnailPreviewUrl = null
     course.categoryId = null
     course.discount = null
     course.rate = 5
   }
 
-  watch(()=>categoryIdSelected.value,(newValue,oldValue)=>{
-    if(newValue && newValue!==oldValue){
+  watch(() => categoryIdSelected.value, (newValue, oldValue) => {
+    if (newValue && newValue !== oldValue) {
       if (dataTable.value?.request) {
-        dataTable.value.request.categoryId = newValue;
-        dataTable.value.reload(dataTable.value.request);
+        dataTable.value.request.categoryId = newValue
+        dataTable.value.reload(dataTable.value.request)
       }
     }
   })
