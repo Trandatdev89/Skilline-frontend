@@ -5,23 +5,26 @@
           ref="dataTable"
           :get-data-function="getDataOrder"
       >
-        <el-table-column prop="id" label="ID" />
+        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="fullname" label="Người tạo đơn" />
-        <el-table-column prop="phone" label="Số điện thoại" />
-        <el-table-column prop="email" label="Email" />
-        <el-table-column prop="address" label="Địa chỉ" />
         <el-table-column prop="username" label="Tài khoản" />
-        <el-table-column prop="quantity" label="Số lượng" />
-        <el-table-column prop="totalPrice" label="Tổng tiền" />
-        <el-table-column prop="status" label="rạng thái thanh toán ">
+        <el-table-column prop="email" label="Email" />
+        <el-table-column prop="phone" label="Số điện thoại" />
+        <el-table-column prop="address" label="Địa chỉ" />
+        <el-table-column prop="totalPrice" label="Tổng tiền">
           <template #default="scope">
-            <el-tag>
+            {{ scope.row.totalPrice?.toLocaleString('vi-VN') }}đ
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="Trạng thái thanh toán">
+          <template #default="scope">
+            <el-tag :type="scope.row.status === 'PAID' ? 'success' : scope.row.status === 'PENDING' ? 'warning' : 'danger'">
               {{ scope.row.status }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="Ngày tạo đơn" />
-        <el-table-column prop="action" label="Hành động">
+        <el-table-column label="Hành động" fixed="right" width="120">
           <template #default="scope">
             <el-tooltip
                 v-for="menu in MenuActionOrder"
@@ -62,14 +65,14 @@
   const createDialog = ref<InstanceType<typeof CreateDialog> | null>(null)
 
   const handleShowDialog = (row: any,type:string) => {
-     switch (type){
-       case "detailOrder":
-         componentDetail.value = ManageCourse;
-         break;
-       case "paymentOrder":
-         componentDetail.value = null;
-         break;
-     }
+    switch (type){
+      case "detailOrder":
+        componentDetail.value = ManageCourse;
+        break;
+      case "paymentOrder":
+        componentDetail.value = null;
+        break;
+    }
     createDialog.value?.show()
   }
 
@@ -84,4 +87,3 @@
 <style scoped lang="scss">
 
 </style>
-

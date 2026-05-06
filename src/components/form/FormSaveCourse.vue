@@ -1,39 +1,74 @@
 <template>
-  <el-form
-      ref="formRef"
-      :model="modelValue"
-      :rules="rules">
-    <el-form-item label-position="top" label="Tiêu đề" prop="title">
+  <el-form ref="formRef" :model="modelValue" :rules="rules" label-position="top">
+    <el-form-item label="Tiêu đề" prop="title">
       <el-input v-model="modelValue.title" />
     </el-form-item>
-    <el-form-item label-position="top" label="Cấp độ" prop="level">
-      <el-select v-model="modelValue.level">
-        <el-option :value="LevelStudent.BEGINNER" :label="LevelStudent.BEGINNER" />
-        <el-option :value="LevelStudent.ADVANCE" :label="LevelStudent.ADVANCE" />
+
+    <el-form-item label="Cấp độ" prop="level">
+      <el-select v-model="modelValue.level" style="width: 100%">
+        <el-option :value="LevelStudent.BEGINNER" label="Người mới (Beginner)" />
+        <el-option :value="LevelStudent.ADVANCE" label="Nâng cao (Advance)" />
+        <el-option :value="LevelStudent.MASTER" label="Chuyên gia (Master)" />
       </el-select>
     </el-form-item>
-    <el-form-item label-position="top" label="Giá" prop="price">
-      <el-input-number v-model="modelValue.price" />
-    </el-form-item>
-    <el-form-item label-position="top" label="Giảm giá" prop="discount">
-      <el-input-number v-model="modelValue.discount" />
-    </el-form-item>
-    <el-form-item label-position="top" label="Đánh giá" prop="rate">
-      <el-input-number v-model="modelValue.rate" />
-    </el-form-item>
-    <el-form-item label-position="top" label="Danh mục" prop="categoryId">
-      <el-select v-model="modelValue.categoryId" multiple-limit="1" @visible-change="handleVisibleChange">
-        <el-option v-for="item in listCategory" :key="item.id" :value="item.id" :label="item.name">
-          {{ item.name }}
-        </el-option>
+
+    <el-form-item label="Trạng thái xuất bản" prop="publishStatus">
+      <el-select v-model="modelValue.publishStatus" style="width: 100%">
+        <el-option value="DRAFT" label="Bản nháp" />
+        <el-option value="PUBLISHER" label="Đã xuất bản" />
+        <el-option value="ARCHIVED" label="Lưu trữ" />
       </el-select>
     </el-form-item>
-    <el-form-item label-position="top" label="Mô tả" prop="desc">
-      <el-input type="textarea" v-model="modelValue.desc" />
+
+    <el-form-item label="Danh mục" prop="categoryId">
+      <el-select v-model="modelValue.categoryId" style="width: 100%" @visible-change="handleVisibleChange">
+        <el-option v-for="item in listCategory" :key="item.id" :value="item.id" :label="item.name" />
+      </el-select>
+    </el-form-item>
+
+    <el-row :gutter="16">
+      <el-col :span="12">
+        <el-form-item label="Giá gốc (VND)" prop="price">
+          <el-input-number v-model="modelValue.price" :min="0" style="width: 100%" />
+        </el-form-item>
+      </el-col>
+      <el-col :span="12">
+        <el-form-item label="Giảm giá (%)" prop="discount">
+          <el-input-number v-model="modelValue.discount" :min="0" :max="100" style="width: 100%" />
+        </el-form-item>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="16">
+      <el-col :span="12">
+        <el-form-item label="Thời hạn truy cập" prop="accessDurationValue">
+          <el-input-number v-model="modelValue.accessDurationValue" :min="1" style="width: 100%" />
+        </el-form-item>
+      </el-col>
+      <el-col :span="12">
+        <el-form-item label="Đơn vị thời gian" prop="accessDurationUnit">
+          <el-select v-model="modelValue.accessDurationUnit" style="width: 100%">
+            <el-option value="MINUTE" label="Phút" />
+            <el-option value="HOURS" label="Giờ" />
+            <el-option value="DAY" label="Ngày" />
+            <el-option value="WEEK" label="Tuần" />
+            <el-option value="MONTH" label="Tháng" />
+            <el-option value="YEAR" label="Năm" />
+          </el-select>
+        </el-form-item>
+      </el-col>
+    </el-row>
+
+    <el-form-item label="Đánh giá" prop="rate">
+      <el-rate v-model="modelValue.rate" :max="5" allow-half show-score />
+    </el-form-item>
+
+    <el-form-item label="Mô tả" prop="desc">
+      <el-input type="textarea" :rows="4" v-model="modelValue.desc" />
     </el-form-item>
 
     <!-- Upload ảnh khoá học -->
-    <el-form-item label-position="top" label="Ảnh khóa học">
+    <el-form-item label="Ảnh khóa học">
       <el-upload
           :limit="1"
           :auto-upload="false"
@@ -46,20 +81,15 @@
       </el-upload>
     </el-form-item>
 
-    <!-- Progress bar khi upload -->
-    <el-progress
-        v-if="uploading"
-        :percentage="uploadPercent"
-        :stroke-width="6"
-        style="margin-bottom: 12px" />
+    <el-progress v-if="uploading" :percentage="uploadPercent" :stroke-width="6" style="margin-bottom: 12px" />
   </el-form>
 
   <!-- Preview ảnh -->
-  <div style="position: relative; width: 100px; height: 100px" v-if="imgPreview">
+  <div style="position: relative; width: 100px; height: 100px; margin-top: 8px" v-if="imgPreview">
     <span
-        style="position: absolute; color: red; font-size: 25px; cursor: pointer; top: -18px; right: -8px"
-        @click="handleRemoveFile">X</span>
-    <img :src="imgPreview" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover" />
+        style="position: absolute; color: red; font-size: 20px; cursor: pointer; top: -14px; right: -8px; z-index:1"
+        @click="handleRemoveFile">✕</span>
+    <img :src="imgPreview" alt="thumbnail" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px" />
   </div>
 </template>
 
@@ -81,39 +111,21 @@
   const selectDropdown = ref<HTMLElement | null>(null)
   const modelValue = defineModel<CourseReq>({ required: true })
 
-  const validationPrice = (rule: any, value: any, callback: any) => {
-    if (value < 0) {
-      callback(new Error('Giá giảm không được nhỏ hơn 0'))
-    } else {
-      callback()
-    }
-  }
-
   const rules = reactive<FormRules>({
     title: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }],
-    level: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }],
-    price: [
-      { required: true, message: 'Trường này bắt buộc', trigger: 'blur' },
-      { validator: validationPrice, trigger: 'blur' }
-    ]
+    level: [{ required: true, message: 'Trường này bắt buộc', trigger: 'change' }],
+    publishStatus: [{ required: true, message: 'Trường này bắt buộc', trigger: 'change' }],
+    categoryId: [{ required: true, message: 'Trường này bắt buộc', trigger: 'change' }],
+    price: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }],
   })
 
-  /**
-   * Khi người dùng chọn file ảnh:
-   * 1. Preview ngay bằng ObjectURL
-   * 2. Upload lên S3 qua presigned URL
-   * 3. Lưu assetId vào modelValue để gửi lên server khi save course
-   */
   const handleProcessFile = async (file: any) => {
     if (!file?.raw) return
-
     const rawFile: File = file.raw
 
-    // Preview ngay lập tức
     imgPreview.value = URL.createObjectURL(rawFile)
     modelValue.value.thumbnailFile = rawFile
     modelValue.value.assetId = null
-
     uploading.value = true
     uploadPercent.value = 0
 
@@ -132,9 +144,7 @@
   }
 
   const handleRemoveFile = () => {
-    if (imgPreview.value?.startsWith('blob:')) {
-      URL.revokeObjectURL(imgPreview.value)
-    }
+    if (imgPreview.value?.startsWith('blob:')) URL.revokeObjectURL(imgPreview.value)
     imgPreview.value = ''
     modelValue.value.thumbnailFile = null
     modelValue.value.assetId = null
@@ -143,9 +153,7 @@
 
   const handleScroll = async (e: Event) => {
     const ev = e.target as HTMLElement
-    if (ev.scrollTop + ev.clientHeight >= ev.scrollHeight - 20) {
-      await getListCategory()
-    }
+    if (ev.scrollTop + ev.clientHeight >= ev.scrollHeight - 20) await getListCategory()
   }
 
   const handleVisibleChange = async (visible: boolean) => {
@@ -157,9 +165,7 @@
         dropdown.addEventListener('scroll', handleScroll, { passive: true })
       }
     } else {
-      if (selectDropdown.value) {
-        selectDropdown.value.removeEventListener('scroll', handleScroll)
-      }
+      selectDropdown.value?.removeEventListener('scroll', handleScroll)
     }
   }
 
@@ -168,9 +174,7 @@
     try {
       await formRef.value.validate()
       return true
-    } catch (error) {
-      return false
-    }
+    } catch { return false }
   }
 
   const resetFields = () => {
@@ -178,20 +182,13 @@
     handleRemoveFile()
   }
 
-  // Khi edit course: hiện ảnh cũ từ server (thumbnailPreviewUrl)
   watch(
       () => modelValue.value.thumbnailPreviewUrl,
-      (url) => {
-        if (url) {
-          imgPreview.value = url
-        }
-      },
+      (url) => { if (url) imgPreview.value = url },
       { immediate: true }
   )
 
-  onMounted(async () => {
-    await getListCategory()
-  })
+  onMounted(async () => { await getListCategory() })
 
   defineExpose({ resetFields, validate })
 </script>

@@ -1,8 +1,11 @@
+import type { ExpireUnit } from '@/type/req/CourseReq.ts'
+
 export interface QuizReq {
-  id: string | null,
-  lectureId?: string | null,
-  title: string | null
-  desc: string | null
-  timeLimit?: any,
+  id: number | null
+  lectureId: string | null
+  title: string
+  desc: string
   maxAttempt: number | null
+  timeLimit: number | null
+  timeUnit: ExpireUnit | null
 }

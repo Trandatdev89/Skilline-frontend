@@ -51,17 +51,19 @@
           ref="dataTable"
           :get-data-function="handleFilter"
       >
-        <el-table-column prop="id" label="ID" />
+        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="Tiêu đề" />
-        <el-table-column prop="description" label="Mo ta" />
-        <el-table-column prop="timeLimit" label="Thời gian thi" />
-        <el-table-column prop="maxAttempt" label="Thi toi da" />
-        <el-table-column prop="status" label="Hanh dong">
+        <el-table-column prop="description" label="Mô tả" />
+        <el-table-column prop="timeLimit" label="Thời gian thi">
+          <template #default="scope">
+            {{ scope.row.timeLimit }} {{ scope.row.timeUnit }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="maxAttempt" label="Số lần thi tối đa" />
+        <el-table-column label="Hành động" fixed="right" width="80">
           <template #default="scope">
             <el-button @click="updateCourse(scope.row)">
-              <el-icon>
-                <RefreshLeft />
-              </el-icon>
+              <el-icon><RefreshLeft /></el-icon>
             </el-button>
           </template>
         </el-table-column>
@@ -112,11 +114,46 @@
     lectureId: selectArgumentOfQuiz.lectureIdSelected,
     title: '',
     desc: '',
-    maxAttempt: null
+    maxAttempt: null,
+    timeLimit: null,
+    timeUnit: null
   })
 
-  const handleCreateQuiz = () => {
-    console.log(dataQuizNeedSave)
+  const handleCreateQuiz = async () => {
+    const isValid = await formSaveQuiz.value?.validate()
+    if (!isValid) return
+
+    loading.value = true
+    try {
+      const res = await QuizApi.saveQuiz({
+        id: dataQuizNeedSave.id ?? undefined,
+        lectureId: selectArgumentOfQuiz.lectureIdSelected,
+        title: dataQuizNeedSave.title,
+        desc: dataQuizNeedSave.desc,
+        maxAttempt: dataQuizNeedSave.maxAttempt,
+        timeLimit: dataQuizNeedSave.timeLimit,
+        timeUnit: dataQuizNeedSave.timeUnit
+      })
+      if (res.code !== 200) throw new Error(res.message)
+
+      createDialog.value?.hide()
+      dataTable.value?.reload(dataTable.value?.request)
+      resetQuizData()
+    } catch (e: any) {
+      console.log(e)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const resetQuizData = () => {
+    dataQuizNeedSave.id = null
+    dataQuizNeedSave.lectureId = selectArgumentOfQuiz.lectureIdSelected
+    dataQuizNeedSave.title = ''
+    dataQuizNeedSave.desc = ''
+    dataQuizNeedSave.maxAttempt = null
+    dataQuizNeedSave.timeLimit = null
+    dataQuizNeedSave.timeUnit = null
   }
 
   const showFormAddQuiz = () => {

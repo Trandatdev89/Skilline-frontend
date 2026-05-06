@@ -1,18 +1,23 @@
-import LevelStudent from '@/enums/LevelStudent.ts'
+import type  LevelStudent  from '@/enums/LevelStudent.ts'
+
+export type PublishStatus = 'DRAFT' | 'PUBLISHER' | 'ARCHIVED'
+export type ExpireUnit = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'HOURS' | 'MINUTE'
 
 export interface CourseReq {
   id: number | null
   title: string
-  level: LevelStudent
   desc: string
+  level: LevelStudent
   price: number | null
   discount: number | null
   categoryId: number | null
   rate: number
-  // Presigned upload: lưu assetId trả về từ server sau khi upload ảnh lên S3
+  // Các field mới tương ứng BE
+  publishStatus: PublishStatus | null
+  accessDurationValue: number | null
+  accessDurationUnit: ExpireUnit | null
+  // Presigned upload
   assetId: string | null
-  // Chỉ dùng để preview UI, không gửi lên server
   thumbnailFile: File | null
-  // URL preview khi edit (ảnh hiện tại từ server)
   thumbnailPreviewUrl: string | null
 }

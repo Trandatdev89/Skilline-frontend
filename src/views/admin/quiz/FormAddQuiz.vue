@@ -10,8 +10,23 @@
       <el-input v-model="props.lectureId" />
     </el-form-item>
     <el-form-item label-position="top" label="Tối đa số lần thi" prop="maxAttempt">
-      <el-input-number v-model="modelValue.maxAttempt" />
+      <el-input-number v-model="modelValue.maxAttempt" :min="1" />
     </el-form-item>
+    <el-row :gutter="16">
+      <el-col :span="12">
+        <el-form-item label-position="top" label="Thời gian thi" prop="timeLimit">
+          <el-input-number v-model="modelValue.timeLimit" :min="1" style="width: 100%" />
+        </el-form-item>
+      </el-col>
+      <el-col :span="12">
+        <el-form-item label-position="top" label="Đơn vị thời gian" prop="timeUnit">
+          <el-select v-model="modelValue.timeUnit" style="width: 100%">
+            <el-option value="MINUTE" label="Phút" />
+            <el-option value="HOURS" label="Giờ" />
+          </el-select>
+        </el-form-item>
+      </el-col>
+    </el-row>
     <el-form-item label-position="top" label="Mô tả" prop="desc">
       <el-input type="textarea" v-model="modelValue.desc" />
     </el-form-item>

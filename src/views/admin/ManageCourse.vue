@@ -140,19 +140,25 @@
     thumbnailPreviewUrl: null,
     categoryId: null,
     discount: null,
-    rate: 5
+    rate: 5,
+    publishStatus: null,
+    accessDurationValue: null,
+    accessDurationUnit: null
   })
 
   const updateCourse = (row: any) => {
     isEdit.value = true
     course.id = row.id
-    course.desc = row.description         // API trả "description" không phải "desc"
-    course.price = row.priceOriginal      // API trả "priceOriginal" không phải "price"
+    course.desc = row.description
+    course.price = row.priceOriginal
     course.title = row.title
     course.level = row.level
     course.categoryId = row.categoryId
     course.rate = row.rate
     course.discount = Number(row.discount)
+    course.publishStatus = row.publishStatus ?? null
+    course.accessDurationValue = row.accessDurationValue ?? null
+    course.accessDurationUnit = row.expireUnit ?? null
     course.thumbnailPreviewUrl = row.thumbnail_url ?? null
     course.assetId = row.thumbnailAssetId ?? null
     course.thumbnailFile = null
@@ -182,7 +188,10 @@
         categoryId: course.categoryId,
         rate: course.rate,
         discount: course.discount,
-        assetId: course.assetId ?? undefined
+        assetId: course.assetId ?? undefined,
+        publishStatus: course.publishStatus ?? undefined,
+        accessDurationValue: course.accessDurationValue ?? undefined,
+        accessDurationUnit: course.accessDurationUnit ?? undefined
       })
       formSaveCourse.value?.resetFields()
       createDialog.value?.hide()
@@ -235,6 +244,9 @@
     course.categoryId = null
     course.discount = null
     course.rate = 5
+    course.publishStatus = null
+    course.accessDurationValue = null
+    course.accessDurationUnit = null
   }
 
   watch(() => categoryIdSelected.value, (newValue, oldValue) => {

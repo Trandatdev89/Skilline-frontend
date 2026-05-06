@@ -27,44 +27,51 @@
           @reload="handleReloadData"
           :get-data-function="getListLectureByCourseId"
       >
-        <el-table-column prop="id" label="ID" />
-        <el-table-column prop="title" label="Tiêu đề" sortable/>
-        <el-table-column prop="categoryName" label="Danh mục" />
-        <el-table-column prop="duration" label="Thời lượng" sortable/>
-        <el-table-column prop="position" label="Vị trí" sortable/>
-        <el-table-column prop="processStatus" label="Upload" >
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="title" label="Tiêu đề" sortable />
+        <el-table-column prop="position" label="Vị trí" width="80" sortable />
+        <el-table-column prop="durationSeconds" label="Thời lượng" sortable>
           <template #default="scope">
-            <el-tag>
-              {{ scope.row.processStatus }}
+            {{ scope.row.durationSeconds ? formatDuration(scope.row.durationSeconds) : '—' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="publishStatus" label="Trạng thái">
+          <template #default="scope">
+            <el-tag :type="scope.row.publishStatus === 'PUBLISHER' ? 'success' : scope.row.publishStatus === 'DRAFT' ? 'warning' : 'info'">
+              {{ scope.row.publishStatus }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createAt" label="Ngày tạo đơn" sortable/>
-        <el-table-column prop="updateAt" label="Ngày cập nhập" sortable/>
-        <el-table-column prop="urlThumbnail" label="Hình ảnh">
+        <el-table-column prop="previewable" label="Xem thử" width="90">
+          <template #default="scope">
+            <el-tag :type="scope.row.previewable ? 'success' : 'info'">
+              {{ scope.row.previewable ? 'Có' : 'Không' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="urlThumbnail" label="Thumbnail" width="90">
           <template #default="scope">
             <el-image
+                v-if="scope.row.urlThumbnail"
                 style="width: 50px; height: 50px; cursor: pointer;"
                 :src="scope.row.urlThumbnail"
                 :preview-src-list="[scope.row.urlThumbnail]"
                 :initial-index="0"
                 fit="cover"
-                preview-teleported
-            >
+                preview-teleported>
               <template #error>
-                <div class="image-slot">
-                  <el-icon><Picture /></el-icon>
-                </div>
+                <div class="image-slot"><el-icon><Picture /></el-icon></div>
               </template>
             </el-image>
+            <span v-else>—</span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="Hành động">
+        <el-table-column prop="createAt" label="Ngày tạo" sortable />
+        <el-table-column prop="updateAt" label="Ngày cập nhật" sortable />
+        <el-table-column label="Hành động" fixed="right" width="80">
           <template #default="scope">
             <el-button @click="updateCourse(scope.row)">
-              <el-icon>
-                <RefreshLeft />
-              </el-icon>
+              <el-icon><RefreshLeft /></el-icon>
             </el-button>
           </template>
         </el-table-column>
@@ -88,7 +95,7 @@
   import DataTable from '@/components/datatable/DataTable.vue'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
   import LectureApi from '@/api/LectureApi.ts'
-  import { RefreshLeft, Delete } from '@element-plus/icons-vue'
+  import { RefreshLeft, Picture } from '@element-plus/icons-vue'
   import useCourse from '@/composable/useCourse.ts'
   import FormSaveLecture from '@/components/form/FormSaveLecture.vue'
   import { TypeAction } from '@/enums/TypeAction.ts'
@@ -195,6 +202,7 @@
         dataTable.value.request.courseId = newValue
         await dataTable.value.reload(dataTable.value.request)
       }
+      lecture.courseId = newValue;
     }
   })
 
@@ -214,6 +222,14 @@
 
   const handleReloadData = (request: RequestParam) => {
     dataTable.value?.reload(request)
+  }
+
+  const formatDuration = (seconds: number): string => {
+    const hrs = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
+    const secs = Math.floor(seconds % 60)
+    if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 </script>
 
