@@ -8,6 +8,7 @@
     </el-form-item>
     <el-form-item label-position="top" label="Ảnh danh mục">
       <el-upload
+          ref="inputUpload"
           :limit="1"
           :auto-upload="false"
           :show-file-list="false"
@@ -38,7 +39,7 @@
 
 <script setup lang="ts">
   import { reactive, ref, watch } from 'vue'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import type { FormInstance, FormRules, UploadInstance } from 'element-plus'
   import { Upload } from '@element-plus/icons-vue'
   import MediaApi from '@/api/MediaApi.ts'
   import AlertService from '@/service/AlertService.ts'
@@ -46,6 +47,7 @@
   const imgUpload = ref<string>('')
   const uploading = ref(false)
   const uploadPercent = ref(0)
+  const inputUpload = ref<UploadInstance>();
 
   const formRef = ref<FormInstance>()
   const rules = reactive<FormRules>({
@@ -66,9 +68,12 @@
    * 3. Lưu assetId vào modelValue
    */
   const handleProcessFile = async (file: any) => {
+    console.log("ANC")
     if (!file?.raw) return
 
     const rawFile: File = file.raw
+
+    console.log(rawFile);
 
     // Preview ngay
     if (imgUpload.value?.startsWith('blob:')) URL.revokeObjectURL(imgUpload.value)
@@ -89,6 +94,7 @@
       handleRemoveFile()
     } finally {
       uploading.value = false
+      inputUpload.value?.clearFiles();
     }
   }
 
@@ -97,6 +103,7 @@
     imgUpload.value = ''
     modelValue.value.assetId = null
     modelValue.value.imgPreviewUrl = null
+    inputUpload.value?.clearFiles();
   }
 
   const validate = async (): Promise<boolean> => {
@@ -115,12 +122,20 @@
   }
 
   // Khi edit: hiện ảnh cũ từ server
+  // deep+immediate để catch cả trường hợp dialog mở lại với data mới
   watch(
       () => modelValue.value.imgPreviewUrl,
       (url) => {
-        if (url) imgUpload.value = url
+        // Chỉ set khi không đang preview blob (tức là chưa upload ảnh mới)
+        if (url && !imgUpload.value.startsWith('blob:')) {
+          imgUpload.value = url
+        }
+        // Nếu url bị clear (resetData) thì xóa preview luôn
+        if (!url && !imgUpload.value.startsWith('blob:')) {
+          imgUpload.value = ''
+        }
       },
-      { immediate: true }
+      { immediate: true, deep: true }
   )
 
   defineExpose({ validate, resetFields })

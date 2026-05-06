@@ -24,6 +24,7 @@
           accept="video/*"
           :limit="1"
           drag
+          ref="inputUpload"
           @change="handleProcessVideoFile">
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
         <div class="el-upload__text">
@@ -107,7 +108,7 @@
 
 <script setup lang="ts">
   import { reactive, ref } from 'vue'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import type { FormInstance, FormRules, UploadInstance } from 'element-plus'
   import { Delete, UploadFilled } from '@element-plus/icons-vue'
   import MediaApi from '@/api/MediaApi.ts'
   import AlertService from '@/service/AlertService.ts'
@@ -123,6 +124,7 @@
   const videoDuration = ref(0)
   const videoUploading = ref(false)
   const videoUploadPercent = ref(0)
+  const inputUpload = ref<UploadInstance>()
 
   // Thumbnail state
   const thumbnailPreview = ref<string>('')
@@ -160,6 +162,7 @@
       handleRemoveVideo()
     } finally {
       videoUploading.value = false
+      inputUpload.value?.clearFiles()
     }
   }
 
@@ -207,6 +210,7 @@
     videoDuration.value = 0
     modelValue.value.contentAssetId = null
     modelValue.value.durationSeconds = null
+    inputUpload.value?.clearFiles()
   }
 
   const handleRemoveThumbnail = () => {

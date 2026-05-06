@@ -1,32 +1,34 @@
 <template>
   <div class="course">
     <div class="course__add" style="display: flex;align-items: center;justify-content: space-between;margin: 25px 0">
-      <el-select
-          v-model="categoryIdSelected"
-          filterable
-          allow-create
-          default-first-option
-          :reserve-keyword="false"
-          @visible-change="handleVisibleChange"
-          placeholder="Choose tags for your article"
-          style="width: 240px"
-      >
-        <el-option
-            v-for="item in listCategory"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-        />
-      </el-select>
-      <el-button @click="handleShowCreateCourse">
-        Add Multiple Course
-      </el-button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <el-select
+            v-model="categoryIdSelected"
+            filterable
+            allow-create
+            default-first-option
+            :reserve-keyword="false"
+            @visible-change="handleVisibleChange"
+            placeholder="Lọc theo danh mục"
+            style="width: 240px"
+        >
+          <el-option v-for="item in listCategory" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
+        <el-button
+            v-if="selectedIds.length > 0"
+            type="danger"
+            :icon="Delete"
+            :loading="deleteLoading"
+            @click="handleDeleteSelected">
+          Xóa {{ selectedIds.length }} mục
+        </el-button>
+      </div>
+      <el-button @click="handleShowCreateCourse" :icon="CirclePlus">Thêm khóa học</el-button>
     </div>
     <div class="course__table">
-      <DataTable
-          ref="dataTable"
-          :get-data-function="getListCourse"
-      >
+      <DataTable ref="dataTable" :get-data-function="getListCourse"
+                 @selection-change="(rows: any[]) => selectedIds = rows.map(r => r.id)">
+        <el-table-column type="selection" width="50" />
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="title" label="Tiêu đề" />
         <el-table-column prop="level" label="Cấp độ" />
@@ -80,13 +82,10 @@
         </el-table-column>
         <el-table-column prop="createdAt" label="Ngày tạo" />
         <el-table-column prop="updatedAt" label="Ngày cập nhật" />
-        <el-table-column label="Hành động" fixed="right" width="80">
+        <el-table-column label="Hành động" fixed="right" width="110">
           <template #default="scope">
-            <el-button @click="updateCourse(scope.row)">
-              <el-icon>
-                <RefreshLeft />
-              </el-icon>
-            </el-button>
+            <el-button @click="updateCourse(scope.row)" :icon="EditPen" circle size="small" />
+            <el-button type="danger" @click="handleDeleteOne(scope.row.id)" :icon="Delete" circle size="small" />
           </template>
         </el-table-column>
       </DataTable>
@@ -108,26 +107,61 @@
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
   import LevelStudent from '@/enums/LevelStudent.ts'
   import CourseApi from '@/api/CourseApi.ts'
-  import { Picture, RefreshLeft } from '@element-plus/icons-vue'
+  import { CirclePlus, Delete, EditPen, Picture } from '@element-plus/icons-vue'
   import useCourse from '@/composable/useCourse.ts'
   import useCategory from '@/composable/useCategory.ts'
   import { TypeAction } from '@/enums/TypeAction.ts'
   import FormSaveCourse from '@/components/form/FormSaveCourse.vue'
   import type { CourseReq } from '@/type/req/CourseReq.ts'
   import { useRoute } from 'vue-router'
+  import { ElMessageBox } from 'element-plus'
 
 
   const dataTable = ref<InstanceType<typeof DataTable> | null>()
   const createDialog = ref()
 
   const loading = ref(false)
-  const { listCourse, saveCourse } = useCourse()
+  const { saveCourse } = useCourse()
   const { listCategory, getListCategory } = useCategory()
-  const categoryIdSelected = ref<number>()
+  const categoryIdSelected = ref<number | null>(null)
   const selectDropdown = ref<HTMLElement | null>(null)
   const formSaveCourse = ref()
   const route = useRoute()
   const isEdit = ref(false)
+
+  const selectedIds = ref<number[]>([])
+  const deleteLoading = ref(false)
+
+  const handleDeleteOne = async (id: number) => {
+    try {
+      await ElMessageBox.confirm('Bạn có chắc muốn xóa khóa học này?', 'Xác nhận xóa', {
+        confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', type: 'warning'
+      })
+      deleteLoading.value = true
+      await CourseApi.deleteCourse([id])
+      dataTable.value?.reload(dataTable.value?.request)
+    } catch (e: any) {
+      if (e !== 'cancel') console.error(e)
+    } finally {
+      deleteLoading.value = false
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    try {
+      await ElMessageBox.confirm(`Bạn có chắc muốn xóa ${selectedIds.value.length} khóa học?`, 'Xác nhận xóa', {
+        confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', type: 'warning'
+      })
+      deleteLoading.value = true
+      await CourseApi.deleteCourse(selectedIds.value)
+      selectedIds.value = []
+      dataTable.value?.reload(dataTable.value?.request)
+    } catch (e: any) {
+      if (e !== 'cancel') console.error(e)
+    } finally {
+      deleteLoading.value = false
+    }
+  }
 
   const course = reactive<CourseReq>({
     id: null,
@@ -138,7 +172,7 @@
     assetId: null,
     thumbnailFile: null,
     thumbnailPreviewUrl: null,
-    categoryId: null,
+    categoryId: categoryIdSelected?.value,
     discount: null,
     rate: 5,
     publishStatus: null,
@@ -171,6 +205,8 @@
 
   const handleCreateCourse = async () => {
 
+    console.log('Course data to save:', course)
+
     const isValid = formSaveCourse.value?.validate()
     if (!isValid) {
       return
@@ -178,7 +214,6 @@
     loading.value = true
 
     try {
-      // Gửi JSON thay vì FormData — backend nhận assetId, không nhận file trực tiếp nữa
       await saveCourse({
         id: course.id ?? undefined,
         title: course.title,
@@ -241,7 +276,6 @@
     course.assetId = null
     course.thumbnailFile = null
     course.thumbnailPreviewUrl = null
-    course.categoryId = null
     course.discount = null
     course.rate = 5
     course.publishStatus = null
@@ -255,6 +289,7 @@
         dataTable.value.request.categoryId = newValue
         dataTable.value.reload(dataTable.value.request)
       }
+      course.categoryId = newValue
     }
   })
 
@@ -263,13 +298,17 @@
       dataTable.value?.reload({
         page: 1,
         size: 10,
-        keyword: newKeyword as string
+        keyword: newKeyword as string,
+        categoryId: categoryIdSelected.value ?? undefined
       })
     }
   }, { immediate: true })
 
   onMounted(async () => {
     await getListCategory()
+    if (listCategory.value.length > 0) {
+      categoryIdSelected.value = listCategory.value[0].id
+    }
   })
 </script>
 

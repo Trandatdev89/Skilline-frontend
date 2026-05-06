@@ -1,32 +1,20 @@
 <template>
   <div class="lecture">
     <div class="lecture__add" style="display: flex;align-items: center;justify-content: space-between;margin: 25px 0">
-      <el-select
-          v-model="courseIdSelected"
-          filterable
-          allow-create
-          default-first-option
-          :reserve-keyword="false"
-          placeholder="Choose tags for your article"
-          style="width: 240px"
-      >
-        <el-option
-            v-for="item in listCourse"
-            :key="item.id"
-            :label="item.title"
-            :value="item.id"
-        />
-      </el-select>
-      <el-button @click="handleShowCreateCourse">
-        Thêm bài giảng
-      </el-button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <el-select v-model="courseIdSelected" filterable default-first-option placeholder="Chọn khóa học" style="width: 240px">
+          <el-option v-for="item in listCourse" :key="item.id" :label="item.title" :value="item.id" />
+        </el-select>
+        <el-button v-if="selectedIds.length > 0" type="danger" :icon="Delete" :loading="deleteLoading" @click="handleDeleteSelected">
+          Xóa {{ selectedIds.length }} mục
+        </el-button>
+      </div>
+      <el-button @click="handleShowCreateCourse" :icon="CirclePlus">Thêm bài giảng</el-button>
     </div>
     <div class="lecture__table">
-      <DataTable
-          ref="dataTable"
-          @reload="handleReloadData"
-          :get-data-function="getListLectureByCourseId"
-      >
+      <DataTable ref="dataTable" @reload="handleReloadData" :get-data-function="getListLectureByCourseId"
+                 @selection-change="(rows: any[]) => selectedIds = rows.map(r => r.id)">
+        <el-table-column type="selection" width="50" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="Tiêu đề" sortable />
         <el-table-column prop="position" label="Vị trí" width="80" sortable />
@@ -68,11 +56,10 @@
         </el-table-column>
         <el-table-column prop="createAt" label="Ngày tạo" sortable />
         <el-table-column prop="updateAt" label="Ngày cập nhật" sortable />
-        <el-table-column label="Hành động" fixed="right" width="80">
+        <el-table-column label="Hành động" fixed="right" width="110">
           <template #default="scope">
-            <el-button @click="updateCourse(scope.row)">
-              <el-icon><RefreshLeft /></el-icon>
-            </el-button>
+            <el-button @click="updateCourse(scope.row)" :icon="EditPen" circle size="small" />
+            <el-button type="danger" @click="handleDeleteOne(scope.row.id)" :icon="Delete" circle size="small" />
           </template>
         </el-table-column>
       </DataTable>
@@ -95,13 +82,14 @@
   import DataTable from '@/components/datatable/DataTable.vue'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
   import LectureApi from '@/api/LectureApi.ts'
-  import { RefreshLeft, Picture } from '@element-plus/icons-vue'
+  import { RefreshLeft, Picture, Delete, EditPen, CirclePlus } from '@element-plus/icons-vue'
   import useCourse from '@/composable/useCourse.ts'
   import FormSaveLecture from '@/components/form/FormSaveLecture.vue'
   import { TypeAction } from '@/enums/TypeAction.ts'
   import useLecture from '@/composable/useLecture..ts'
   import { useRoute } from 'vue-router'
   import type { RequestParam } from '@/type/RequestParam.ts'
+  import { ElMessageBox } from 'element-plus'
 
   const dataTable = ref<InstanceType<typeof DataTable> | null>(null)
   const createDialog = ref<InstanceType<typeof CreateDialog> | null>()
@@ -112,6 +100,40 @@
   const {listLectureOfCourse,saveLectureByCourseId} = useLecture();
   const isEdit = ref(false)
   const route = useRoute()
+
+  const selectedIds = ref<string[]>([])
+  const deleteLoading = ref(false)
+
+  const handleDeleteOne = async (id: string) => {
+    try {
+      await ElMessageBox.confirm('Bạn có chắc muốn xóa bài giảng này?', 'Xác nhận xóa', {
+        confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', type: 'warning'
+      })
+      deleteLoading.value = true
+      await LectureApi.deleteLecture([id])
+      dataTable.value?.reload(dataTable.value?.request)
+    } catch (e: any) {
+      if (e !== 'cancel') console.error(e)
+    } finally {
+      deleteLoading.value = false
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    try {
+      await ElMessageBox.confirm(`Bạn có chắc muốn xóa ${selectedIds.value.length} bài giảng?`, 'Xác nhận xóa', {
+        confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', type: 'warning'
+      })
+      deleteLoading.value = true
+      await LectureApi.deleteLecture(selectedIds.value)
+      selectedIds.value = []
+      dataTable.value?.reload(dataTable.value?.request)
+    } catch (e: any) {
+      if (e !== 'cancel') console.error(e)
+    } finally {
+      deleteLoading.value = false
+    }
+  }
 
   const lecture = reactive({
     id: null as string | null,

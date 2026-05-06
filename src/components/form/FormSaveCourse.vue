@@ -20,12 +20,6 @@
       </el-select>
     </el-form-item>
 
-    <el-form-item label="Danh mục" prop="categoryId">
-      <el-select v-model="modelValue.categoryId" style="width: 100%" @visible-change="handleVisibleChange">
-        <el-option v-for="item in listCategory" :key="item.id" :value="item.id" :label="item.name" />
-      </el-select>
-    </el-form-item>
-
     <el-row :gutter="16">
       <el-col :span="12">
         <el-form-item label="Giá gốc (VND)" prop="price">
@@ -70,6 +64,7 @@
     <!-- Upload ảnh khoá học -->
     <el-form-item label="Ảnh khóa học">
       <el-upload
+          ref="inputUpload"
           :limit="1"
           :auto-upload="false"
           :show-file-list="false"
@@ -95,9 +90,8 @@
 
 <script setup lang="ts">
   import LevelStudent from '@/enums/LevelStudent.ts'
-  import { nextTick, onMounted, reactive, ref, watch } from 'vue'
-  import type { FormInstance, FormRules } from 'element-plus'
-  import useCategory from '@/composable/useCategory.ts'
+  import { reactive, ref, watch } from 'vue'
+  import type { FormInstance, FormRules, UploadInstance } from 'element-plus'
   import type { CourseReq } from '@/type/req/CourseReq.ts'
   import MediaApi from '@/api/MediaApi.ts'
   import AlertService from '@/service/AlertService.ts'
@@ -106,9 +100,8 @@
   const uploading = ref(false)
   const uploadPercent = ref(0)
 
-  const { listCategory, getListCategory } = useCategory()
   const formRef = ref<FormInstance>()
-  const selectDropdown = ref<HTMLElement | null>(null)
+  const inputUpload = ref<UploadInstance>()
   const modelValue = defineModel<CourseReq>({ required: true })
 
   const rules = reactive<FormRules>({
@@ -116,7 +109,7 @@
     level: [{ required: true, message: 'Trường này bắt buộc', trigger: 'change' }],
     publishStatus: [{ required: true, message: 'Trường này bắt buộc', trigger: 'change' }],
     categoryId: [{ required: true, message: 'Trường này bắt buộc', trigger: 'change' }],
-    price: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }],
+    price: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }]
   })
 
   const handleProcessFile = async (file: any) => {
@@ -140,6 +133,7 @@
       handleRemoveFile()
     } finally {
       uploading.value = false
+      inputUpload.value?.clearFiles()
     }
   }
 
@@ -149,24 +143,7 @@
     modelValue.value.thumbnailFile = null
     modelValue.value.assetId = null
     modelValue.value.thumbnailPreviewUrl = null
-  }
-
-  const handleScroll = async (e: Event) => {
-    const ev = e.target as HTMLElement
-    if (ev.scrollTop + ev.clientHeight >= ev.scrollHeight - 20) await getListCategory()
-  }
-
-  const handleVisibleChange = async (visible: boolean) => {
-    if (visible) {
-      await nextTick()
-      const dropdown = document.querySelector('.el-select-dropdown__wrap')
-      if (dropdown) {
-        selectDropdown.value = dropdown as HTMLElement
-        dropdown.addEventListener('scroll', handleScroll, { passive: true })
-      }
-    } else {
-      selectDropdown.value?.removeEventListener('scroll', handleScroll)
-    }
+    inputUpload.value?.clearFiles()
   }
 
   const validate = async (): Promise<boolean> => {
@@ -174,7 +151,9 @@
     try {
       await formRef.value.validate()
       return true
-    } catch { return false }
+    } catch {
+      return false
+    }
   }
 
   const resetFields = () => {
@@ -184,11 +163,16 @@
 
   watch(
       () => modelValue.value.thumbnailPreviewUrl,
-      (url) => { if (url) imgPreview.value = url },
-      { immediate: true }
+      (url) => {
+        if (url && !imgPreview.value.startsWith('blob:')) {
+          imgPreview.value = url
+        }
+        if (!url && !imgPreview.value.startsWith('blob:')) {
+          imgPreview.value = ''
+        }
+      },
+      { immediate: true, deep: true }
   )
-
-  onMounted(async () => { await getListCategory() })
 
   defineExpose({ resetFields, validate })
 </script>

@@ -7,21 +7,15 @@ class CourseApi {
   }
 
   async getListCourses(params?: any): Promise<ApiResponse<any>> {
-    const config = {
-      params: params ? params : {}
-    }
-    return await httpApi.get(`/api/course`, config)
+    return await httpApi.get('/api/course', { params: params || {} })
   }
 
   async getListCoursesMySelf(params?: any): Promise<ApiResponse<any>> {
-    const config = {
-      params: params ? params : {}
-    }
-    return await httpApi.get(`/api/course/my-self`, config)
+    return await httpApi.get('/api/course/my-self', { params: params || {} })
   }
 
   async getListCourseNotPagi(): Promise<ApiResponse<any>> {
-    return await httpApi.get(`/api/course/not-pagi`)
+    return await httpApi.get('/api/course/not-pagi')
   }
 
   async getListCourseById(ids: number[]): Promise<ApiResponse<any>> {
@@ -35,14 +29,11 @@ class CourseApi {
   }
 
   async deleteCourse(ids: number[]): Promise<ApiResponse<any>> {
-    return await httpApi.delete('/api/course/list/${ids}')
+    return await httpApi.delete(`/api/course/${ids.join(',')}`)
   }
 
   async searchCourse(params?: any): Promise<ApiResponse<any>> {
-    const config = {
-      params: params ? params : {}
-    }
-    return await httpApi.get('/api/course/search-advance', config)
+    return await httpApi.get('/api/course/search-advance', { params: params || {} })
   }
 }
 

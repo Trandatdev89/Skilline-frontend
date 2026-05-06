@@ -8,6 +8,7 @@
           :data="data"
           ref="tableRef"
           @sort-change="handleSortChange"
+          @selection-change="(val: any) => emit('selection-change', val)"
           empty-text="Không có dữ liệu"
           class="no-wrap-table"
           style="width: 100%">
@@ -37,7 +38,7 @@
   const totalPage = ref<number>(0)
   const loading = ref<boolean>(false)
   const windowHeight = ref(window.innerHeight)
-  const emit = defineEmits(['reload'])
+  const emit = defineEmits(['reload', 'selection-change'])
 
   const request = reactive<RequestParam>({
     page: 1,
