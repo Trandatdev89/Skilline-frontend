@@ -13,7 +13,6 @@ const useLecture= ()=>{
     resetLoadMore()
     await loadMoreData((req: RequestParam) => {
       req.courseId = courseId;
-      console.log('abc')
       return LectureApi.getLecturesByCourseId(req);
     });
     listLectureOfCourse.value = data.value;

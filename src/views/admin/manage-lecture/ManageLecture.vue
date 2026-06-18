@@ -97,12 +97,13 @@
   const courseIdSelected = ref(1)
   const formSaveLecture = ref<InstanceType<typeof FormSaveLecture> | null>(null);
   const { listCourse, getListCourseByMySelf } = useCourse()
-  const {listLectureOfCourse,saveLectureByCourseId} = useLecture();
+  const {saveLectureByCourseId} = useLecture();
   const isEdit = ref(false)
   const route = useRoute()
 
   const selectedIds = ref<string[]>([])
   const deleteLoading = ref(false)
+  const previewVideo = ref();
 
   const handleDeleteOne = async (id: string) => {
     try {
@@ -149,7 +150,7 @@
   const updateCourse = (row: any) => {
     isEdit.value = true
     lecture.id = row.id
-    lecture.courseId = row.courseId
+    lecture.courseId = courseIdSelected.value
     lecture.title = row.title
     lecture.contentAssetId = row.contentAssetId ?? null
     lecture.thumbnailAssetId = row.thumbnailAssetId ?? null
@@ -207,6 +208,7 @@
     lecture.durationSeconds = null
     lecture.previewable = false
     lecture.publishStatus = null
+    previewVideo.value = null
   }
 
 

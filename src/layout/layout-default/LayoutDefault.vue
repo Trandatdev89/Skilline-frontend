@@ -1,7 +1,7 @@
 <template>
   <div class="layout-default">
     <Header/>
-    <div class="main" style="min-height: 50vh">
+    <div class="main" style="min-height: 80vh">
       <router-view/>
     </div>
     <Footer/>

@@ -26,7 +26,9 @@
           drag
           ref="inputUpload"
           @change="handleProcessVideoFile">
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <el-icon class="el-icon--upload">
+          <upload-filled />
+        </el-icon>
         <div class="el-upload__text">
           Kéo thả video vào đây hoặc <em>click để chọn</em>
         </div>
@@ -87,7 +89,8 @@
       <el-descriptions :column="1" size="small" border>
         <el-descriptions-item label="Tên file">{{ videoFileName }}</el-descriptions-item>
         <el-descriptions-item label="Kích thước">{{ formatFileSize(videoFileSize) }}</el-descriptions-item>
-        <el-descriptions-item label="Thời lượng" v-if="videoDuration">{{ formatDuration(videoDuration) }}</el-descriptions-item>
+        <el-descriptions-item label="Thời lượng" v-if="videoDuration">{{ formatDuration(videoDuration) }}
+        </el-descriptions-item>
         <el-descriptions-item label="Trạng thái">
           <el-tag :type="modelValue.contentAssetId ? 'success' : 'warning'">
             {{ modelValue.contentAssetId ? 'Đã upload lên S3' : 'Đang upload...' }}
@@ -240,7 +243,9 @@
     try {
       await formRef.value.validate()
       return true
-    } catch { return false }
+    } catch {
+      return false
+    }
   }
 
   const resetFields = () => {

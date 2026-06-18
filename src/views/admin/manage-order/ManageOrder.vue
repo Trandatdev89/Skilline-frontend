@@ -58,7 +58,7 @@
   import { MenuActionOrder } from '@/common/MenuActionOrder.ts'
   import { TypeAction } from '@/enums/TypeAction.ts'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
-  import ManageCourse from '@/views/admin/ManageCourse.vue'
+  import ManageCourse from '@/views/admin/manage-course/ManageCourse.vue'
 
   const dataTable = ref()
   const componentDetail = ref();

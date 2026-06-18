@@ -1,32 +1,29 @@
+
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
 
-const useCartStore = defineStore("cart-store",()=>{
+const useCartStore = defineStore('cart-store', () => {
+  const courseIds = ref<number[]>([])
 
-  const listCourse = ref<any>([]);
-
-  const handleAddToCart = (courseId:any)=>{
-    let isAdd = false;
-    const exists = listCourse.value.find((item:any) => item.id === courseId);
-    if (!exists) {
-      listCourse.value.push(courseId);
-      isAdd = true;
-    }
-    return isAdd;
+  const handleAddToCart = (courseId: number): boolean => {
+    if (courseIds.value.includes(Number(courseId))) return false
+    courseIds.value.push(Number(courseId))
+    return true
   }
 
-  const handleSubCart = (id:any) :any =>{
-    listCourse.value = listCourse.value.filter((item:any)=>item.id!==id);
+  const handleSubCart = (courseId: number) => {
+    courseIds.value = courseIds.value.filter(id => id !== Number(courseId))
   }
 
-  const handleDeletes = () :any=>{
-    listCourse.value = [];
+  const handleDeletes = () => {
+    courseIds.value = []
   }
 
-  return {listCourse,handleAddToCart,handleSubCart,handleDeletes};
+  const cartCount = computed(() => courseIds.value.length)
 
-},{
-  persist:true
-});
+  return { courseIds, cartCount, handleAddToCart, handleSubCart, handleDeletes }
+}, {
+  persist: true
+})
 
-export default useCartStore;
+export default useCartStore

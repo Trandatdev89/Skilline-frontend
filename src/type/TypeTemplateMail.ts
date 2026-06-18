@@ -7,5 +7,6 @@ export enum TypeTemplateMail{
   LIVE_STREAM_REMINDER='LIVE_STREAM_REMINDER',       // Nhắc lịch live-stream
   PASSWORD_RESET='PASSWORD_RESET',             // Đặt lại mật khẩu
   ASSIGNMENT_DEADLINE='ASSIGNMENT_DEADLINE',        // Hết hạn nộp bài
-  TEACHER_APPLICATION='TEACHER_APPLICATION',        // Đăng ký làm giáo viên
+  TEACHER_APPLICATION='TEACHER_APPLICATION',
+  VERIFY_ACCOUNT='VERIFY_ACCOUNT'
 }

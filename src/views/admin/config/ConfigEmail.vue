@@ -1,30 +1,34 @@
 <template>
   <Ckeditor
       v-model="dataTemplateEmail.htmlContent"
+      :subject="dataTemplateEmail.subject"
+      :language="dataTemplateEmail.language"
+      :active="dataTemplateEmail.active"
       :listTypeMail="listTypeMail"
-      @change-type="changeTypeTemplateEmail"
-      @save="handleSaveTemplateEmail" />
+      @changeType="changeTypeTemplateEmail"
+      @save="handleSaveTemplateEmail"
+  />
 </template>
 
 <script setup lang="ts">
-  import { reactive, ref, watch } from 'vue'
+  import { onMounted, reactive } from 'vue'
   import Ckeditor from '@/components/ckeditor/CKEditor.vue'
   import { TypeTemplateMail } from '@/type/TypeTemplateMail.ts'
   import type TemplateMailReq from '@/type/req/TemplateMailReq.ts'
   import TemplateMailApi from '@/api/TemplateMailApi.ts'
   import AlertService from '@/service/AlertService.ts'
 
-
-  const content = ref('')
   const dataTemplateEmail = reactive<TemplateMailReq>({
-    type:'',
-    active:true,
-    htmlContent:"",
-    language:"vi",
-    subject:""
+    type: '',
+    active: true,
+    htmlContent: '',
+    language: 'vi',
+    subject: ''
   })
 
-  const listTypeMail = [TypeTemplateMail.WELCOME,
+  const listTypeMail = [
+    TypeTemplateMail.WELCOME,
+    TypeTemplateMail.VERIFY_ACCOUNT,
     TypeTemplateMail.TEACHER_APPLICATION,
     TypeTemplateMail.ASSIGNMENT_DEADLINE,
     TypeTemplateMail.CERTIFICATE_ISSUED,
@@ -32,28 +36,79 @@
     TypeTemplateMail.PASSWORD_RESET,
     TypeTemplateMail.PAYMENT_SUCCESS,
     TypeTemplateMail.COURSE_ENROLLED,
-    TypeTemplateMail.LIVE_STREAM_REMINDER];
+    TypeTemplateMail.LIVE_STREAM_REMINDER
+  ]
 
-  const handleSaveTemplateEmail = async (data: any) => {
-    try{
-      const res = await TemplateMailApi.saveTemplateMail(dataTemplateEmail);
+  const loadTemplateMail = async (type: string) => {
 
-      if(res.code!==200){
-        throw res.message;
-      }else{
-        AlertService.success("Success","Luu template thanh cong!")
+    try {
+
+      const res =
+          await TemplateMailApi.getTemplateMail(type)
+
+      if (res.code !== 200) {
+        throw new Error(res.message)
       }
 
-    }catch(error){
-      AlertService.error("Error","Luu template khong thanh cong!")
+      const template = res.data
+
+      dataTemplateEmail.type = template.type
+      dataTemplateEmail.subject = template.subject
+      dataTemplateEmail.htmlContent = template.htmlContent
+      dataTemplateEmail.language = template.language
+      dataTemplateEmail.active = template.active
+
+    } catch (error) {
+
+      dataTemplateEmail.type = type
+      dataTemplateEmail.subject = ''
+      dataTemplateEmail.htmlContent = ''
+      dataTemplateEmail.language = 'vi'
+      dataTemplateEmail.active = true
+
+    }
+
+  }
+
+  const changeTypeTemplateEmail = async (value: string) => {
+
+    await loadTemplateMail(value)
+
+  }
+  const handleSaveTemplateEmail = async (payload: TemplateMailReq) => {
+
+    try {
+
+      Object.assign(dataTemplateEmail, payload)
+
+      const res = await TemplateMailApi.saveTemplateMail(
+          dataTemplateEmail
+      )
+
+      if (res.code !== 200) {
+        throw new Error(res.message)
+      }
+
+      AlertService.success(
+          'Success',
+          'Lưu template thành công!'
+      )
+
+    } catch (error) {
+
+      AlertService.error(
+          'Error',
+          'Lưu template không thành công!'
+      )
+
     }
   }
 
-  const changeTypeTemplateEmail = (value:string)=>{
-    dataTemplateEmail.type = value;
-  }
+  onMounted(async () => {
 
-  watch(dataTemplateEmail,(newValue)=>{
-    console.log(newValue);
+    await loadTemplateMail(
+        TypeTemplateMail.VERIFY_ACCOUNT
+    )
+
   })
 </script>

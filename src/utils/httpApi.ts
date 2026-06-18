@@ -3,6 +3,7 @@ import axios from 'axios'
 import AlertService from '@/service/AlertService.ts'
 import AuthenticationApi from '@/api/AuthenticationApi.ts'
 import useAuthentication from '@/stores/Authentication.ts'
+import router from '@/router/route.ts'
 
 const timeOut = 1000 * 60 * 5
 let isRefreshing = false
@@ -46,7 +47,6 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
     }
 
     const csrfToken = getCookie('XSRF-TOKEN')
-    console.log('🔍 CSRF Token từ cookie:', csrfToken)
     if (csrfToken) {
       config.headers['X-XSRF-TOKEN'] = csrfToken
     }
@@ -67,7 +67,14 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
     // retry có tác dụng là tránh viêc gọi refresh-token vô hạn ,kiểu như refresh thất bại nếu
     // không có retry sẽ call api mãi mãi có nó nếu thất bại reject ném về login luôn
 
-    if (error.response?.status === 1012 && !originalRequest._retry) {
+    const code = error.response?.data?.code
+
+    console.log("Code:",code);
+    if (
+      code === 1012 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/refresh-token')
+    ) {
       if (isRefreshing) {
         // Nếu đang refresh rồi thì cho request vào hàng chờ
         return new Promise((resolve, reject) => {
@@ -91,9 +98,13 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
         }
       } catch (refreshError) {
         processQueue(refreshError)
+
         useAuthentication().logout()
-        window.location.href = '/login'
-        AlertService.error('Session expired', 'Please login again')
+
+        if (router.currentRoute.value.path !== '/login') {
+          await router.replace('/login')
+        }
+
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
@@ -124,5 +135,6 @@ const createApiRequest = (baseUrl: any): AxiosInstance => {
   return request
 }
 
-const httpApi = createApiRequest('http://localhost:8080')
+const API_URL = import.meta.env.VITE_API_LOCAL
+const httpApi = createApiRequest(API_URL)
 export { httpApi }

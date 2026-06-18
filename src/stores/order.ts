@@ -1,27 +1,45 @@
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
+import { ref, computed } from 'vue'
+import type { CourseRes } from '@/type/res/CourseRes.ts'
 
-const useOrderStore = defineStore("order-store",()=>{
 
-  const listOrder = reactive({
-    order:[],
-    total:0
-  });
 
-  const getListOrderNeedPayment = (value:any,totalAmount:number)=>{
-    listOrder.order = value;
-    listOrder.total = totalAmount;
+const useOrderStore = defineStore('order-store', () => {
+
+  const pendingCourses = ref<CourseRes[]>([])
+
+  const setPendingCourses = (courses: CourseRes[]) => {
+    pendingCourses.value = courses
   }
 
-  const updateOrder = ()=>{
-    listOrder.order = [];
-    listOrder.total = 0;
+  const clearOrder = () => {
+    pendingCourses.value = []
   }
 
-  return {listOrder,getListOrderNeedPayment,updateOrder};
+  const pendingCourseIds = computed(() => pendingCourses.value.map(c => c.id))
 
-},{
-  persist:true
-});
+  const totalAmount = computed(() =>
+    pendingCourses.value.reduce(
+      (sum, item) => sum + (item.priceDiscount ?? item.priceOriginal ?? 0),
+      0
+    )
+  )
 
-export default useOrderStore;
+  const totalSaved = computed(() =>
+    pendingCourses.value.reduce(
+      (sum, item) => sum + Math.max(0, (item.priceOriginal ?? 0) - (item.priceDiscount ?? 0)),
+      0
+    )
+  )
+
+  return {
+    pendingCourses,
+    pendingCourseIds,
+    totalAmount,
+    totalSaved,
+    setPendingCourses,
+    clearOrder
+  }
+})
+
+export default useOrderStore

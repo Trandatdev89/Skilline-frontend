@@ -112,8 +112,12 @@
     price: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }]
   })
 
-  const handleProcessFile = async (file: any) => {
-    if (!file?.raw) return
+  const handleProcessFile = (file: any) => {
+
+    if (!file?.raw) {
+      return
+    }
+
     const rawFile: File = file.raw
 
     imgPreview.value = URL.createObjectURL(rawFile)

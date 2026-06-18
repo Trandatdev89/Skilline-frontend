@@ -9,8 +9,8 @@
     <el-form-item label-position="top" label="Bai giang" prop="lectureId">
       <el-input v-model="props.lectureId" />
     </el-form-item>
-    <el-form-item label-position="top" label="Tối đa số lần thi" prop="maxAttempt">
-      <el-input-number v-model="modelValue.maxAttempt" :min="1" />
+    <el-form-item label-position="top" label="Tối thiểu số lần thi(5 lần)" prop="maxAttempt">
+      <el-input-number v-model="modelValue.maxAttempt" :min="5" />
     </el-form-item>
     <el-row :gutter="16">
       <el-col :span="12">
@@ -51,7 +51,16 @@
       { required: true, message: 'Trường này băt buộc', trigger: 'blur' }
     ],
     maxAttempt: [
-      { min: 5, message: 'Trường này băt buộc', trigger: 'blur' }
+      {
+        validator: (_rule: any, value: any, callback: any) => {
+          if (!value || value < 5) {
+            callback(new Error('Số lần thi tối thiểu là 5'))
+          } else {
+            callback()
+          }
+        },
+        trigger: 'change'
+      }
     ]
   })
 

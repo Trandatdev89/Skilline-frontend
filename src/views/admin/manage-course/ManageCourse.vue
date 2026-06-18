@@ -26,7 +26,9 @@
       <el-button @click="handleShowCreateCourse" :icon="CirclePlus">Thêm khóa học</el-button>
     </div>
     <div class="course__table">
-      <DataTable ref="dataTable" :get-data-function="getListCourse"
+      <DataTable ref="dataTable"
+                 v-if="categoryLoaded"
+                 :get-data-function="getListCourse"
                  @selection-change="(rows: any[]) => selectedIds = rows.map(r => r.id)">
         <el-table-column type="selection" width="50" />
         <el-table-column prop="id" label="ID" width="60" />
@@ -55,7 +57,6 @@
           </template>
         </el-table-column>
         <el-table-column prop="rate" label="Đánh giá" />
-        <el-table-column prop="categoryId" label="Danh mục" />
         <el-table-column prop="thumbnail_url" label="Ảnh">
           <template #default="scope">
             <el-image
@@ -131,6 +132,7 @@
 
   const selectedIds = ref<number[]>([])
   const deleteLoading = ref(false)
+  const categoryLoaded = ref(false)
 
   const handleDeleteOne = async (id: number) => {
     try {
@@ -205,8 +207,6 @@
 
   const handleCreateCourse = async () => {
 
-    console.log('Course data to save:', course)
-
     const isValid = formSaveCourse.value?.validate()
     if (!isValid) {
       return
@@ -253,14 +253,12 @@
   const handleVisibleChange = async (visible: boolean) => {
     if (visible) {
       await nextTick()
-      // Tìm dropdown element
       const dropdown = document.querySelector('.el-select-dropdown__wrap')
       if (dropdown) {
         selectDropdown.value = dropdown as HTMLElement
         dropdown.addEventListener('scroll', handleScroll, { passive: true })
       }
     } else {
-      // Remove listener khi đóng dropdown
       if (selectDropdown.value) {
         selectDropdown.value.removeEventListener('scroll', handleScroll)
       }
@@ -309,6 +307,7 @@
     if (listCategory.value.length > 0) {
       categoryIdSelected.value = listCategory.value[0].id
     }
+    categoryLoaded.value = true
   })
 </script>
 

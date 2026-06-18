@@ -6,7 +6,10 @@
     <el-form-item label-position="top" label="Tiêu đề danh mục" prop="title">
       <el-input v-model="modelValue.title" />
     </el-form-item>
-    <el-form-item label-position="top" label="Ảnh danh mục">
+    <el-form-item
+        label-position="top"
+        label="Ảnh danh mục">
+
       <el-upload
           ref="inputUpload"
           :limit="1"
@@ -50,8 +53,15 @@
   const inputUpload = ref<UploadInstance>();
 
   const formRef = ref<FormInstance>()
+
   const rules = reactive<FormRules>({
-    title: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }]
+    title: [
+      {
+        required: true,
+        message: 'Trường này bắt buộc',
+        trigger: 'blur'
+      }
+    ]
   })
 
   const modelValue = defineModel<{
@@ -59,7 +69,9 @@
     title: string
     assetId: string | null
     imgPreviewUrl: string | null
-  }>({ required: true })
+  }>({
+    required: true
+  })
 
   /**
    * Khi người dùng chọn ảnh:
@@ -111,7 +123,9 @@
     try {
       await formRef.value.validate()
       return true
-    } catch (error) {
+
+    } catch {
+
       return false
     }
   }
@@ -138,7 +152,10 @@
       { immediate: true, deep: true }
   )
 
-  defineExpose({ validate, resetFields })
+  defineExpose({
+    validate,
+    resetFields
+  })
 </script>
 
 <style scoped lang="scss"></style>

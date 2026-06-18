@@ -30,6 +30,8 @@
 
 <style scoped lang="scss">
   .layoutAdmin {
+
+
     &__container {
       min-height: 100vh !important;
       display: flex;
@@ -40,8 +42,8 @@
       overflow: hidden;
     }
 
-    &__header,
     &__main {
+      overflow-x: hidden;
       padding: 0;
     }
 

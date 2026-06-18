@@ -88,11 +88,8 @@
             redirectAfterLogin()
             localStorage.setItem('deviceFingerprint', dataForm.deviceFingerprint)
             AlertService.success('Login Success!', res.message)
-          } else {
-            AlertService.error('Login Fail!', res.message)
           }
         } catch (error: any) {
-          console.error('Login error:', error)
           const errorMessage = error?.response?.data?.message || error?.message || 'Please try again!'
           AlertService.error('Login Fail!', errorMessage)
         } finally {
@@ -106,8 +103,8 @@
     redirect.handleRedirect()
   }
 
-  onMounted(async () => {
-    const res = await authentication.isAuthentication()
+  onMounted( () => {
+    const res = authentication.userInfo.isAuthenticated;
     if (res) {
       redirectAfterLogin()
     }

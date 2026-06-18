@@ -24,11 +24,11 @@
 
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { TypeTabInfo } from '@/type/TypeTabInfo.ts'
-import NotificationPermission from '@/views/infomation/NotificationPermission.vue'
-import ChangePassWord from '@/views/infomation/ChangePassWord.vue'
-import Voucher from '@/views/infomation/Voucher.vue'
-import InformationUser from '@/views/infomation/InformationUser.vue'
+import { TypeTabInfo } from '@/type/TypeTabInfo.js'
+import NotificationPermission from '@/views/private/NotificationPermission.vue'
+import ChangePassWord from '@/views/private/ChangePassWord.vue'
+import Voucher from '@/views/private/Voucher.vue'
+import InformationUser from '@/views/private/InformationUser.vue'
 import { Bell, Avatar, Discount, View } from '@element-plus/icons-vue'
 
 const route = useRoute()

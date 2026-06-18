@@ -69,7 +69,7 @@
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
   import AlertService from '@/service/AlertService.ts'
   import CategoryApi from '@/api/CategoryApi.ts'
-  import { RefreshLeft, CirclePlus, Delete, EditPen, Picture } from '@element-plus/icons-vue'
+  import { CirclePlus, Delete, EditPen, Picture } from '@element-plus/icons-vue'
   import { useRoute } from 'vue-router'
   import type { RequestParam } from '@/type/RequestParam.ts'
   import FormSaveCategory from '@/components/form/FormSaveCategory.vue'

@@ -1,649 +1,739 @@
 <template>
-  <div class="course">
+  <div class="lecture-page">
     <div class="container">
-      <div class="course-lecture">
-        <div class="lecture-content">
-          <!-- Title -->
-          <h2 class="course-title">Nội dung khóa học</h2>
 
-          <!-- Lesson Section -->
-          <div class="lesson-section">
+
+      <el-breadcrumb separator="/" class="breadcrumb">
+        <el-breadcrumb-item :to="{ path: '/' }">Trang chủ</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: '/course' }">Khóa học</el-breadcrumb-item>
+        <el-breadcrumb-item>{{ course?.title ?? '...' }}</el-breadcrumb-item>
+      </el-breadcrumb>
+
+      <div class="lecture-layout">
+
+        <div class="lecture-main">
+
+          <div class="course-hero" v-if="!isCheckUserBuy && course">
+            <div class="hero-thumb">
+              <img :src="course.thumbnail_url" :alt="course.title" @error="handleImgError" />
+              <div class="hero-overlay">
+                <el-icon class="play-icon-big">
+                  <VideoPlay />
+                </el-icon>
+              </div>
+            </div>
+            <div class="hero-info">
+              <el-tag :type="levelType(course.level)" size="small" class="level-tag">
+                {{ levelLabel(course.level) }}
+              </el-tag>
+              <h1 class="hero-title">{{ course.title }}</h1>
+              <div class="hero-meta">
+                <el-rate :model-value="course.rate" disabled size="small" :colors="['#F7BA2A','#F7BA2A','#F7BA2A']" />
+                <span class="rate-val">{{ course.rate?.toFixed(1) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h2 class="section-title">
+              <el-icon>
+                <Star />
+              </el-icon>
+              Bạn sẽ học được gì?
+            </h2>
+            <div class="learn-grid">
+              <div class="learn-item" v-for="(item, i) in learnItems" :key="i">
+                <el-icon class="check-icon">
+                  <CircleCheckFilled />
+                </el-icon>
+                <span>{{ item }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card" v-if="course?.description">
+            <h2 class="section-title">
+              <el-icon>
+                <InfoFilled />
+              </el-icon>
+              Giới thiệu khóa học
+            </h2>
+            <div class="description-text" v-html="formattedDescription"></div>
+          </div>
+
+          <div class="section-card">
+            <h2 class="section-title">
+              <el-icon>
+                <List />
+              </el-icon>
+              Nội dung khóa học
+              <span class="lesson-count">({{ listLectureOfCourse.length }} bài giảng)</span>
+            </h2>
 
             <div class="lesson-list">
               <div
-                  v-for="(lesson,index) in lessons"
+                  v-for="(lesson, index) in listLectureOfCourse"
                   :key="lesson.id"
                   class="lesson-item"
+                  :class="{ clickable: isCheckUserBuy || lesson.previewable }"
+                  @click="(isCheckUserBuy || lesson.previewable) && handleShowLecture(lesson.id)"
               >
-                <div class="lesson-main">
-                  <el-icon class="play-icon">
+                <div class="lesson-left">
+                  <div class="lesson-number">{{ index + 1 }}</div>
+                  <el-icon class="lesson-icon">
                     <VideoPlay />
                   </el-icon>
-                  <span class="lesson-title">Bài {{index+1}} : {{ lesson.title }}</span>
+                  <div class="lesson-info">
+                    <span class="lesson-title-text">{{ lesson.title }}</span>
+                    <span class="lesson-preview-badge" v-if="lesson.previewable && !isCheckUserBuy">
+                      Xem thử
+                    </span>
+                  </div>
                 </div>
-                <div class="lesson-actions">
-                  <span
-                      v-if="isCheckUserBuy"
-                      type="primary"
-                      class="try-link"
-                      @click="handleShowLecture(lesson.id)"
-                  >
+                <div class="lesson-right">
+                  <el-tag v-if="isCheckUserBuy" type="success" size="small" @click.stop="handleShowLecture(lesson.id)">
                     Học
+                  </el-tag>
+                  <span class="lesson-duration" v-if="lesson.durationSeconds">
+                    {{ formatDuration(lesson.durationSeconds) }}
                   </span>
-                  <span class="lesson-duration">{{ lesson.duration }}</span>
+                  <el-icon class="lock-icon" v-if="!isCheckUserBuy && !lesson.previewable">
+                    <Lock />
+                  </el-icon>
                 </div>
+              </div>
+
+              <div class="lesson-empty" v-if="listLectureOfCourse.length === 0">
+                <el-skeleton :rows="4" animated />
               </div>
             </div>
           </div>
+
+          <ReviewSection :courseId="courseId" />
         </div>
 
-        <!-- Course Info Sidebar -->
-        <div class="course-sidebar" v-if="!isCheckUserBuy">
-          <!-- Video Preview -->
-          <div class="video-preview">
-            <div class="video-container">
-              <div class="video-placeholder">
-                <div class="video-content">
-                  <div class="course-badge"></div>
-                  <div class="video-stats">
-                    <span>QUA 130 VIDEO</span>
-                    <span>VÀ 310 BÀI TẬP</span>
-                    <span></span>
-                  </div>
-                  <div class="instructor-info">
-                    <div class="instructor-avatar"></div>
-                    <span></span>
-                  </div>
-                  <el-button class="watch-btn">
-                    <el-icon>
-                      <VideoPlay />
-                    </el-icon>
-                    WATCH VIDEO
-                  </el-button>
-                </div>
-                <div class="play-button">
-                  <el-icon>
-                    <VideoPlay />
-                  </el-icon>
-                </div>
-              </div>
-              <!-- Social Media Icons -->
-              <div class="social-icons">
-                <div class="social-icon youtube"></div>
-                <div class="social-icon facebook"></div>
-              </div>
-            </div>
-          </div>
+        <aside class="course-sidebar" v-if="!isCheckUserBuy && course">
 
-          <!-- Pricing -->
-          <div class="pricing-section">
-            <div class="price-display">
-              <span class="current-price">1,099,000</span>
-              <span class="currency">VND</span>
-              <span class="original-price">2,750,000 VND</span>
-            </div>
-            <div style="display: flex;align-items: center;justify-content: space-between">
-              <el-button type="primary" size="large" class="register-btn" @click="handleAdd">
-                Thêm giỏ hàng
-              </el-button>
-              <el-button type="primary" size="large" class="register-btn">
-                Đăng Ký Học
-              </el-button>
-            </div>
-          </div>
-
-          <!-- Course Stats -->
-          <div class="course-stats">
-            <div class="stat-item">
+          <div class="sidebar-thumb">
+            <img :src="course.thumbnail_url" :alt="course.title" @error="handleImgError" />
+            <div class="thumb-overlay">
               <el-icon>
-                <Document />
+                <VideoPlay />
               </el-icon>
-              <div class="stat-content">
-                <span class="stat-label">Bài giảng</span>
-                <span class="stat-value">170</span>
-              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-pricing">
+            <div class="price-row">
+              <span class="price-current">{{ formatPrice(course.priceDiscount) }}</span>
+              <span class="price-original" v-if="course.priceOriginal > course.priceDiscount">
+                {{ formatPrice(course.priceOriginal) }}
+              </span>
+              <span class="price-badge" v-if="course.discount > 0">-{{ course.discount }}%</span>
             </div>
 
-            <div class="stat-item">
+            <div class="sidebar-actions">
+              <el-button type="primary" size="large" class="btn-cart" @click="handleAdd">
+                <el-icon>
+                  <ShoppingCart />
+                </el-icon>
+                Thêm vào giỏ
+              </el-button>
+            </div>
+          </div>
+
+          <div class="sidebar-stats">
+            <h4 class="stats-title">Thông tin khóa học</h4>
+            <div class="stat-row">
+              <el-icon>
+                <VideoPlay />
+              </el-icon>
+              <span class="stat-label">Số bài giảng</span>
+              <span class="stat-val">{{ listLectureOfCourse.length }} bài</span>
+            </div>
+            <div class="stat-row">
+              <el-icon>
+                <Star />
+              </el-icon>
+              <span class="stat-label">Đánh giá</span>
+              <span class="stat-val">{{ course.rate?.toFixed(1) }} / 5</span>
+            </div>
+            <div class="stat-row">
               <el-icon>
                 <Clock />
               </el-icon>
-              <div class="stat-content">
-                <span class="stat-label">Thời lượng</span>
-                <span class="stat-value">150 giờ</span>
-              </div>
+              <span class="stat-label">Thời hạn</span>
+              <span class="stat-val" v-if="course.accessDurationValue && course.expireUnit">
+                {{ course.accessDurationValue }} {{ unitLabel(course.expireUnit) }}
+              </span>
+              <span class="stat-val lifetime" v-else>Trọn đời</span>
             </div>
-
-            <div class="stat-item">
+            <div class="stat-row">
               <el-icon>
-                <EditPen />
+                <Medal />
               </el-icon>
-              <div class="stat-content">
-                <span class="stat-label">Bài tập</span>
-                <span class="stat-value">520</span>
-              </div>
-            </div>
-
-            <div class="stat-item">
-              <el-icon>
-                <Trophy />
-              </el-icon>
-              <div class="stat-content">
-                <span class="stat-label">Số hữu</span>
-                <span class="stat-value">Trọn đời</span>
-              </div>
+              <span class="stat-label">Cấp độ</span>
+              <span class="stat-val">{{ levelLabel(course.level) }}</span>
             </div>
           </div>
+        </aside>
 
-          <!-- Social Share -->
-          <div class="social-share">
-            <div class="social-item facebook">
-              <el-icon>
-                <Share />
-              </el-icon>
-            </div>
-            <div class="social-item twitter">
-              <el-icon>
-                <Share />
-              </el-icon>
-            </div>
-            <div class="social-item pinterest">
-              <el-icon>
-                <Share />
-              </el-icon>
-            </div>
-            <div class="social-item linkedin">
-              <el-icon>
-                <Share />
-              </el-icon>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
+
   <LectureVideoDialog
       ref="lectureVideoDialog"
-      title="Video Player" :video-id="videoId"
+      title="Video Player"
+      :video-id="videoId"
   />
 </template>
 
 <script setup lang="ts">
-  import { onMounted, ref } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
+  import ReviewSection from './ReviewSection.vue'
   import {
-    VideoPlay,
-    Document,
+    CircleCheckFilled,
     Clock,
-    EditPen,
-    Trophy,
-    Share
+    InfoFilled,
+    List,
+    Lock,
+    Medal,
+    ShoppingCart,
+    Star,
+    VideoPlay
   } from '@element-plus/icons-vue'
   import { useRoute } from 'vue-router'
-  import LectureApi from '@/api/LectureApi.js'
   import LectureVideoDialog from '@/components/dialog/LectureVideoDialog.vue'
-  import AlertService from '@/service/AlertService.js'
-  import useCartStore from '@/stores/cart.js'
-  import EnrollmentApi from '@/api/EnrollmentApi.ts'
-
-  const lessons = ref()
-  const videoId = ref()
-  const lectureVideoDialog = ref()
-  const accessToken = localStorage.getItem("accessToken");
+  import AlertService from '@/service/AlertService'
+  import useCartStore from '@/stores/cart'
+  import EnrollmentApi from '@/api/EnrollmentApi'
+  import useCourse from '@/composable/useCourse'
+  import LectureApi from '@/api/LectureApi.ts'
+  import useRedirect from '@/composable/useRedirect.ts'
 
   const route = useRoute()
-  const courseId = route.query.courseId;
-  const {handleAddToCart} = useCartStore();
-  const isCheckUserBuy = ref<boolean>(false);
+  const courseId = computed(() => Number(route.query.courseId))
 
-  const getListLesson = async () => {
-    try {
-      let res = await LectureApi.getLecturesByCourseIdNotPagi(Number(courseId));
-      lessons.value = res.data;
-    } catch (error) {
-      console.error('Error fetching lectures:', error);
+  const videoId = ref<string>('')
+  const lectureVideoDialog = ref()
+  const isCheckUserBuy = ref<boolean>(false)
+
+  const { handleAddToCart } = useCartStore()
+  const listLectureOfCourse = ref<any>([])
+  const { listCourse, getListCourseByListId } = useCourse()
+  const {redirectCourse} = useRedirect()
+
+
+  const course = computed(() => listCourse.value?.[0] ?? null)
+
+  const learnItems = [
+    'Nắm vững kiến thức nền tảng và nâng cao của khóa học',
+    'Áp dụng thực hành qua các bài tập thực tế',
+    'Xây dựng nền tảng kỹ thuật vững chắc',
+    'Nâng cao tư duy logic và khả năng giải quyết vấn đề',
+    'Học cách tối ưu hóa code và hiệu suất',
+    'Có kinh nghiệm làm việc với các công nghệ hiện đại'
+  ]
+
+  const getListLectureByCourseId = async () => {
+    const requestParams = {
+      page: 1,
+      size: 100,
+      courseId: courseId.value
+    }
+    const res = await LectureApi.getLecturesByCourseId(requestParams)
+    listLectureOfCourse.value = res.data.list
+    if (listLectureOfCourse.value.length === 0) {
+      await redirectCourse()
     }
   }
 
-  const checkUserEnrollment = async ()=>{
-    const res = await EnrollmentApi.checkUserEnrollment(Number(courseId));
-    isCheckUserBuy.value = res.data;
+  const formattedDescription = computed(() => {
+    if (!course.value?.description) return ''
+    return course.value.description
+        .replace(/\n/g, '<br/>')
+  })
+
+  const formatPrice = (value: number): string =>
+      new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value ?? 0)
+
+  const formatDuration = (seconds: number): string => {
+    if (!seconds) return ''
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${String(s).padStart(2, '0')}`
   }
 
-  const handleShowLecture = (id:number) => {
+  const levelLabel = (level: string): string =>
+      ({ BEGINNER: 'Cơ bản', INTERMEDIATE: 'Trung cấp', ADVANCE: 'Nâng cao' }[level] ?? level)
+
+  const levelType = (level: string): string =>
+      ({ BEGINNER: 'success', INTERMEDIATE: 'warning', ADVANCE: 'danger' }[level] ?? 'info')
+
+  const unitLabel = (unit: string): string =>
+      ({ YEAR: 'năm', MONTH: 'tháng', DAY: 'ngày' }[unit] ?? unit)
+
+  const handleImgError = (e: Event) => {
+    ;(e.target as HTMLImageElement).src =
+        'https://via.placeholder.com/400x225/E6F1FB/378ADD?text=Course'
+  }
+
+  const handleShowLecture = (id: string) => {
     videoId.value = id
     lectureVideoDialog.value.show()
   }
 
   const handleAdd = () => {
-
-    const isAdd = handleAddToCart(courseId);
+    if (!course.value) return
+    const isAdd = handleAddToCart(course.value.id)
     if (isAdd) {
-      AlertService.success("Thành công","Thêm sản phẩm vào giỏ thành công")
+      AlertService.success('Thành công', 'Thêm khóa học vào giỏ thành công')
     } else {
-      AlertService.success("Thất bại","Sản phẩm đã thêm vào giỏ rồi")
+      AlertService.error('Thất bại', 'Khóa học đã có trong giỏ hàng')
     }
-  };
+  }
 
-  onMounted(() => {
-    getListLesson()
-    checkUserEnrollment();
-  })
+  const checkUserEnrollment = async () => {
+    const res = await EnrollmentApi.checkUserEnrollment(courseId.value)
+    isCheckUserBuy.value = res.data
+  }
+
+  onMounted(async () => {
+    await Promise.all([
+      getListCourseByListId([courseId.value]),
+      getListLectureByCourseId(),
+      checkUserEnrollment()
+    ])
+  });
+
+  watch(() => courseId.value, (id) => {
+    if (!id || isNaN(id)) {
+      redirectCourse()
+    }
+  }, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
-  .course-lecture {
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 30px;
-    padding: 20px;
-    background-color: #f8f9fa;
+  .lecture-page {
+    background: #f5f6f8;
     min-height: 100vh;
+    padding: 24px 20px;
+  }
 
-    .lecture-content {
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  .breadcrumb {
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
 
-      .course-title {
-        color: #2c5aa0;
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 30px;
-        margin-top: 0;
+  .lecture-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .section-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a2e5a;
+    margin: 0 0 20px 0;
+
+    .el-icon {
+      color: #409eff;
+      font-size: 20px;
+    }
+
+    .lesson-count {
+      font-size: 14px;
+      font-weight: 400;
+      color: #909399;
+      margin-left: 4px;
+    }
+  }
+
+  .course-hero {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+
+    .hero-thumb {
+      position: relative;
+      width: 200px;
+      height: 130px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
-      .lesson-section {
-        .section-header {
-          background: #17a2b8;
-          color: white;
-          padding: 15px 20px;
-          margin-bottom: 0;
-          border-radius: 8px;
+      .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
 
-          h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-          }
+        .play-icon-big {
+          font-size: 40px;
+          color: #fff;
         }
+      }
 
-        .lesson-list {
-          background: white;
-          border: 1px solid #e9ecef;
-          border-top: none;
-          border-radius: 0 0 8px 8px;
-
-          .lesson-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #f1f3f4;
-            transition: all 0.3s ease;
-
-            &:hover {
-              background-color: #f8f9fa;
-            }
-
-            &:last-child {
-              border-bottom: none;
-            }
-
-            &.premium {
-              .lesson-title {
-                color: #6c757d;
-              }
-            }
-
-            .lesson-main {
-              display: flex;
-              align-items: center;
-              flex: 1;
-
-              .play-icon {
-                color: #17a2b8;
-                margin-right: 15px;
-                font-size: 16px;
-              }
-
-              .lesson-title {
-                color: #333;
-                font-size: 15px;
-                line-height: 1.4;
-              }
-            }
-
-            .lesson-actions {
-              display: flex;
-              align-items: center;
-              gap: 15px;
-
-              .try-link {
-                font-size: 14px;
-                text-decoration: none;
-
-                &:hover {
-                  text-decoration: underline;
-                }
-              }
-
-              .lesson-duration {
-                color: #17a2b8;
-                font-size: 14px;
-                font-weight: 500;
-                min-width: 50px;
-                text-align: right;
-              }
-            }
-          }
-        }
+      &:hover .hero-overlay {
+        opacity: 1;
       }
     }
 
-    .course-sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    .hero-info {
+      flex: 1;
 
-      .video-preview {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-
-        .video-container {
-          position: relative;
-
-          .video-placeholder {
-            aspect-ratio: 16/9;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            padding: 20px;
-
-            .video-content {
-              text-align: center;
-              z-index: 2;
-
-              .course-badge {
-                background: rgba(255, 255, 255, 0.2);
-                padding: 8px 16px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: bold;
-                margin-bottom: 15px;
-              }
-
-              .video-stats {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                margin-bottom: 15px;
-
-                span {
-                  font-size: 14px;
-                  font-weight: 600;
-                }
-              }
-
-              .instructor-info {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 20px;
-                font-size: 10px;
-
-                .instructor-avatar {
-                  width: 30px;
-                  height: 30px;
-                  background: rgba(255, 255, 255, 0.3);
-                  border-radius: 50%;
-                }
-              }
-
-              .watch-btn {
-                background: #17a2b8;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-
-                &:hover {
-                  background: #138496;
-                }
-              }
-            }
-
-            .play-button {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: 60px;
-              height: 60px;
-              background: rgba(255, 255, 255, 0.9);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              cursor: pointer;
-              transition: all 0.3s ease;
-
-              &:hover {
-                background: white;
-                transform: translate(-50%, -50%) scale(1.1);
-              }
-
-              .el-icon {
-                font-size: 24px;
-                color: #17a2b8;
-              }
-            }
-          }
-
-          .social-icons {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            display: flex;
-            gap: 8px;
-
-            .social-icon {
-              width: 25px;
-              height: 25px;
-              border-radius: 4px;
-              cursor: pointer;
-
-              &.youtube {
-                background: #ff0000;
-              }
-
-              &.facebook {
-                background: #1877f2;
-              }
-            }
-          }
-        }
+      .level-tag {
+        margin-bottom: 10px;
       }
 
-      .pricing-section {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-
-        .price-display {
-          margin-bottom: 20px;
-
-          .current-price {
-            font-size: 28px;
-            font-weight: bold;
-            color: #e74c3c;
-          }
-
-          .currency {
-            font-size: 18px;
-            color: #e74c3c;
-            margin-left: 5px;
-          }
-
-          .original-price {
-            display: block;
-            font-size: 16px;
-            color: #999;
-            text-decoration: line-through;
-            margin-top: 5px;
-          }
-        }
-
-        .register-btn {
-          width: 100%;
-          background: #17a2b8;
-          border: none;
-          padding: 15px;
-          font-size: 16px;
-          font-weight: bold;
-          border-radius: 8px;
-
-          &:hover {
-            background: #138496;
-          }
-        }
+      .hero-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a2e5a;
+        margin: 0 0 12px 0;
+        line-height: 1.4;
       }
 
-      .course-stats {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-
-        .stat-item {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          padding: 12px 0;
-          border-bottom: 1px solid #f1f3f4;
-
-          &:last-child {
-            border-bottom: none;
-          }
-
-          .el-icon {
-            color: #17a2b8;
-            font-size: 20px;
-          }
-
-          .stat-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-
-            .stat-label {
-              color: #666;
-              font-size: 14px;
-            }
-
-            .stat-value {
-              color: #333;
-              font-weight: 600;
-              font-size: 14px;
-            }
-          }
-        }
-      }
-
-      .social-share {
+      .hero-meta {
         display: flex;
-        justify-content: center;
-        gap: 15px;
+        align-items: center;
+        gap: 8px;
 
-        .social-item {
-          width: 40px;
-          height: 40px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-
-          .el-icon {
-            color: white;
-            font-size: 18px;
-          }
-
-          &.facebook {
-            background: #1877f2;
-
-            &:hover {
-              background: #166fe5;
-            }
-          }
-
-          &.twitter {
-            background: #1da1f2;
-
-            &:hover {
-              background: #1a94da;
-            }
-          }
-
-          &.pinterest {
-            background: #bd081c;
-
-            &:hover {
-              background: #a70719;
-            }
-          }
-
-          &.linkedin {
-            background: #0077b5;
-
-            &:hover {
-              background: #006ba1;
-            }
-          }
+        .rate-val {
+          font-size: 14px;
+          font-weight: 600;
+          color: #F7BA2A;
         }
       }
     }
   }
 
-  @media (max-width: 1024px) {
-    .course-lecture {
-      grid-template-columns: 1fr;
-      gap: 20px;
+  .learn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
 
-      .course-sidebar {
-        order: -1;
+  .learn-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: #303133;
+    line-height: 1.5;
 
-        .video-preview,
-        .pricing-section,
-        .course-stats {
-          margin-bottom: 0;
+    .check-icon {
+      color: #67c23a;
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+
+  .description-text {
+    font-size: 14px;
+    color: #606266;
+    line-height: 1.8;
+  }
+
+  .lesson-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lesson-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.15s;
+    border-radius: 8px;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: #f9fbff;
+    }
+
+    &.clickable {
+      cursor: pointer;
+    }
+
+    .lesson-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+
+      .lesson-number {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #ecf5ff;
+        color: #409eff;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .lesson-icon {
+        color: #409eff;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+
+      .lesson-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .lesson-title-text {
+        font-size: 14px;
+        color: #303133;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .lesson-preview-badge {
+        font-size: 11px;
+        color: #409eff;
+        font-weight: 500;
+      }
+    }
+
+    .lesson-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+
+      .lesson-duration {
+        font-size: 12px;
+        color: #909399;
+        min-width: 40px;
+        text-align: right;
+      }
+
+      .lock-icon {
+        color: #c0c4cc;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .lesson-empty {
+    padding: 16px;
+  }
+
+  .course-sidebar {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .sidebar-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: #ecf5ff;
+    cursor: pointer;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .el-icon {
+        font-size: 48px;
+        color: #fff;
+      }
+    }
+  }
+
+  .sidebar-pricing {
+    background: #fff;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .price-current {
+      font-size: 26px;
+      font-weight: 700;
+      color: #f56c6c;
+    }
+
+    .price-original {
+      font-size: 14px;
+      color: #c0c4cc;
+      text-decoration: line-through;
+    }
+
+    .price-badge {
+      font-size: 12px;
+      font-weight: 600;
+      background: #fef0f0;
+      color: #f56c6c;
+      border: 1px solid #fde2e2;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .sidebar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .btn-cart, .btn-enroll {
+        width: 100%;
+        height: 44px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+      }
+    }
+  }
+
+  .sidebar-stats {
+    background: #fff;
+    padding: 20px;
+
+    .stats-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #303133;
+      margin: 0 0 14px 0;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .el-icon {
+        font-size: 16px;
+        color: #409eff;
+        flex-shrink: 0;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        color: #909399;
+        flex: 1;
+      }
+
+      .stat-val {
+        font-size: 13px;
+        font-weight: 600;
+        color: #303133;
+
+        &.lifetime {
+          color: #529b2e;
         }
       }
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .lecture-layout {
+      grid-template-columns: 1fr;
+
+      .course-sidebar {
+        position: static;
+        order: -1;
+      }
+    }
+
+    .learn-grid {
+      grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 768px) {
-    .course-lecture {
-      padding: 15px;
+    .lecture-page {
+      padding: 16px 12px;
+    }
 
-      .lecture-content {
-        padding: 20px;
-      }
+    .section-card {
+      padding: 20px;
+    }
 
-      .course-sidebar {
-        .pricing-section,
-        .course-stats {
-          padding: 20px;
-        }
+    .course-hero {
+      flex-direction: column;
+
+      .hero-thumb {
+        width: 100%;
+        height: 200px;
       }
     }
   }
