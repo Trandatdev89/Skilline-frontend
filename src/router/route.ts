@@ -4,29 +4,29 @@ import LayoutDefault from '@/layout/layout-default/LayoutDefault.vue'
 import LayoutAdmin from '@/layout/layout-admin/LayoutAdmin.vue'
 import About from '@/views/About.vue'
 import Pages from '@/router/pages.ts'
-import pages from '@/router/pages.ts'
-import Login from '@/views/login/Login.vue'
-import Post from '@/views/Post.vue'
+import Login from '@/views/auth/Login.vue'
 import Fobiden from '@/views/errorPage/Fobiden.vue'
 import Course from '@/views/Course.vue'
 import Lecture from '@/views/Lecture.vue'
-import Cart from '@/views/Cart.vue'
-import Register from '@/views/login/Register.vue'
-import Dashboard from '@/views/admin/Dashboard.vue'
-import ManageCourse from '@/views/admin/ManageCourse.vue'
-import Success from '@/views/Success.vue'
-import Logout from '@/views/Logout.vue'
-import Category from '@/views/Category.vue'
-import ManageOrder from '@/views/admin/ManageOrder.vue'
-import ManageFile from '@/views/admin/ManageFile.vue'
-import Setting from '@/views/admin/Setting.vue'
-import ManageLecture from '@/views/admin/ManageLecture.vue'
-import ManageCategory from '@/views/ManageCategory.vue'
-import Bought from '@/views/Bought.vue'
-import Order from '@/views/Order.vue'
-import Info from '@/views/Info.vue'
-import ManageQuiz from '@/views/admin/ManageQuiz.vue'
+import Cart from '@/views/private/Cart.vue'
+import Register from '@/views/auth/Register.vue'
+import Dashboard from '@/views/admin/dashboard/Dashboard.vue'
+import ManageCourse from '@/views/admin/manage-course/ManageCourse.vue'
+import ResultPage from '@/views/ResultPage.vue'
+import Logout from '@/views/auth/Logout.vue'
+import ManageOrder from '@/views/admin/manage-order/ManageOrder.vue'
+import Setting from '@/views/admin/config/Setting.vue'
+import ManageLecture from '@/views/admin/manage-lecture/ManageLecture.vue'
+import ManageCategory from '@/views/admin/manage-category/ManageCategory.vue'
+import Bought from '@/views/private/Bought.vue'
+import Order from '@/views/private/Order.vue'
+import Info from '@/views/private/Info.vue'
+import ManageQuiz from '@/views/admin/manage-quiz/ManageQuiz.vue'
 import useAuthentication from '@/stores/Authentication.ts'
+import Blog from '@/views/Blog.vue'
+import Feedback from '@/views/Feedback.vue'
+import Notfound from '@/views/errorPage/Notfound.vue'
+import { RoleType } from '@/enums/RoleType.ts'
 
 
 const router = createRouter({
@@ -42,26 +42,38 @@ const router = createRouter({
         },
         {
           ...Pages.blog,
+          component: Blog
+        },
+        {
+          ...Pages.about,
           component: About
+        },
+        {
+          ...Pages.feedback,
+          component: Feedback
+        },
+        {
+          ...Pages.blog,
+          component: Blog
         },
         {
           ...Pages.fobiden,
           component: Fobiden
         },
         {
-          ...Pages.success,
-          component: Success
+          ...Pages.notfound,
+          component:Notfound
         },
         {
-          ...Pages.category,
-          component: Category
+          ...Pages.resultPage,
+          component: ResultPage
         },
         {
           ...Pages.logout,
           component: Logout,
           meta: {
             requireAuth: true,
-            roles: ['ADMIN', 'USER']
+            roles: [RoleType.ADMIN, RoleType.USER,RoleType.TEACHER]
           }
         },
         {
@@ -82,23 +94,35 @@ const router = createRouter({
         },
         {
           ...Pages.bought,
-          component: Bought
+          component: Bought,
+          meta: {
+            requireAuth: true,
+            roles: [RoleType.ADMIN, RoleType.USER,RoleType.TEACHER]
+          }
         },
         {
           ...Pages.order,
-          component: Order
+          component: Order,
+          meta: {
+            requireAuth: true,
+            roles: [RoleType.ADMIN, RoleType.USER,RoleType.TEACHER]
+          }
         },
         {
           ...Pages.cart,
-          component: Cart
+          component: Cart,
+          meta: {
+            requireAuth: true,
+            roles: [RoleType.ADMIN, RoleType.USER,RoleType.TEACHER]
+          }
         },
         {
           ...Pages.info,
-          component: Info
-        },
-        {
-          ...Pages.post,
-          component: Post
+          component: Info,
+          meta: {
+            requireAuth: true,
+            roles: ['ADMIN', 'USER', 'TEACHER']
+          }
         }
       ]
     },
@@ -135,10 +159,6 @@ const router = createRouter({
           component: ManageOrder
         },
         {
-          ...Pages.manageFile,
-          component: ManageFile
-        },
-        {
           ...Pages.setting,
           component: Setting
         }
@@ -153,24 +173,20 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.matched.some(item => item.meta.requireAuth)) {
 
-    // await authStore.fetchCurrentInfoUser(true)
-    const userInfo = authStore.userInfo;
+    const userInfo = authStore.userInfo
 
-    try {
-      const role = userInfo.role
-      if (!role) {
-        return next(pages.login.path)
-      }
-      const roles = to.meta.roles as string[]
-      if (roles && !roles.includes(role)) {
-        return next(pages.fobiden.path)
-      }
-    } catch (error) {
-      return next(Pages.login.path)
+    if (!userInfo.isAuthenticated || !userInfo.role) {
+      return next('/login')
     }
 
+    const roles = to.meta.roles as string[]
+
+    if (roles && !roles.includes(userInfo.role)) {
+      return next('/fobiden')
+    }
   }
-  return next()
+
+  next()
 })
 
 

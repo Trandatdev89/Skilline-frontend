@@ -3,7 +3,9 @@
     <div class="container">
       <div class="header__top">
         <div class="header__logo">
-          <img :srcset="logo" alt="logo">
+          <RouterLink to="/">
+            <img :srcset="logo" alt="logo">
+          </RouterLink>
         </div>
         <div class="header__list">
           <div class="header__item">
@@ -16,10 +18,10 @@
             <RouterLink to="/blog">Blog</RouterLink>
           </div>
           <div class="header__item">
-            <DropDownCategory
-                @load-more="getCategories"
-                :title="'Category'"
-                            :list-item="listCategory"/>
+            <RouterLink to="/feedback">Feedback</RouterLink>
+          </div>
+          <div class="header__item">
+            <RouterLink to="/about">About</RouterLink>
           </div>
         </div>
         <div class="header__auth header__auth--dropdown" v-if="userInfo.isAuthenticated"
@@ -27,16 +29,16 @@
           <DropDownCustom :title="userInfo.name"
                           :list-link="listLink"
                           :role="userInfo.role"
-                          avatar="https://static.vecteezy.com/system/resources/previews/002/002/403/non_2x/man-with-beard-avatar-character-isolated-icon-free-vector.jpg"/>
+                          avatar="https://static.vecteezy.com/system/resources/previews/002/002/403/non_2x/man-with-beard-avatar-character-isolated-icon-free-vector.jpg" />
           <RouterLink to="/cart">
-            <el-badge :value="listCourse.length" class="item">
+            <el-badge :value="courseIds.length" class="item">
               <el-icon style="font-size: 24px;color: #000000">
-                <ShoppingCart/>
+                <ShoppingCart />
               </el-icon>
             </el-badge>
           </RouterLink>
           <div class="notification">
-            <el-button :icon="Bell" style="font-size: 24px;border: none;background-color: transparent"/>
+            <el-button :icon="Bell" style="font-size: 24px;border: none;background-color: transparent" />
           </div>
         </div>
         <div class="header__auth" v-else>
@@ -99,7 +101,7 @@
   import { Bell, ShoppingCart } from '@element-plus/icons-vue'
   import logo from '@/assets/img/logo.png'
   import girl from '@/assets/img/header-pic.png'
-  import { computed, onMounted, ref, watchEffect } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import { RouterLink, useRoute } from 'vue-router'
   import useAuthentication from '@/stores/Authentication.ts'
   import DropDownCustom from '@/components/dropdown/DropDownCustom.vue'
@@ -110,12 +112,10 @@
   import axios from 'axios'
   import { RoleType } from '@/enums/RoleType.ts'
   import useLoadMore from '@/composable/useLoadMore.ts'
-  import CategoryApi from '@/api/CategoryApi.ts'
-  import DropDownCategory from '@/components/dropdown/DropDownCategory.vue'
 
   const isShow = ref<boolean>(false)
   const router = useRoute()
-  const { listCourse } = storeToRefs(useCartStore())
+  const { courseIds } = storeToRefs(useCartStore())
   const userId = useAuthentication().userInfo.userId
 
   const handleShowBar = () => {
@@ -159,7 +159,7 @@
     {
       title: 'Khóa học đã mua',
       url: '/bought',
-      role: [RoleType.ADMIN, RoleType.TEACHER,RoleType.USER]
+      role: [RoleType.ADMIN, RoleType.TEACHER, RoleType.USER]
     },
     {
       title: 'Thông tin cá nhân',
@@ -173,19 +173,13 @@
     }
   ])
 
-  const listCategory =  ref<any>([]);
+  const listCategory = ref<any>([])
 
   const { userInfo } = storeToRefs(useAuthentication())
 
   onMounted(() => {
-    checkSupport();
-    getCategories();
+    checkSupport()
   })
-
-  const getCategories = async () => {
-    await loadMoreData(() => CategoryApi.getListCategoryPagination(request));
-    listCategory.value = data.value;
-  }
 
 </script>
 
@@ -196,9 +190,9 @@
     font-weight: 500;
   }
 
-  .header{
-    &__item{
-      a{
+  .header {
+    &__item {
+      a {
         font-size: 20px;
         color: #000000;
       }

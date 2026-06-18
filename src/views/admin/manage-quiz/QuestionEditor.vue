@@ -1,69 +1,17 @@
 <template>
-  <div class="quiz-manage">
-    <!-- Toolbar -->
-    <div class="quiz-manage__toolbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <el-select v-model="selectArgs.courseIdSelected" filterable placeholder="Chọn khóa học" style="width:220px">
-          <el-option v-for="item in listCourse" :key="item.id" :label="item.title" :value="item.id" />
-        </el-select>
-        <el-select v-model="selectArgs.lectureIdSelected" filterable placeholder="Chọn bài giảng" style="width:220px" clearable>
-          <el-option v-for="item in listLectureOfCourse" :key="item.id" :label="item.title" :value="item.id" />
-        </el-select>
-        <el-input v-model="selectArgs.keyword" placeholder="Tìm kiếm quiz..." style="width:200px" :prefix-icon="Search" clearable />
-        <el-button
-            v-if="selectedQuizIds.length > 0"
-            type="danger" :icon="Delete" :loading="deleteLoading"
-            @click="handleDeleteSelectedQuiz">
-          Xóa {{ selectedQuizIds.length }} quiz
-        </el-button>
-      </div>
-      <el-button type="primary" :icon="CirclePlus" @click="showFormAddQuiz">Tạo Quiz</el-button>
-    </div>
-
-    <!-- Quiz table -->
-    <DataTable ref="dataTable" :get-data-function="handleFilter"
-               @selection-change="(rows: any[]) => selectedQuizIds = rows.map(r => r.id)">
-      <el-table-column type="selection" width="50" />
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="title" label="Tiêu đề" />
-      <el-table-column prop="description" label="Mô tả" />
-      <el-table-column prop="timeLimit" label="Thời gian thi">
-        <template #default="scope">
-          {{ scope.row.timeLimit }} {{ scope.row.timeUnit }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="maxAttempt" label="Số lần thi tối đa" width="140" />
-      <el-table-column label="Hành động" fixed="right" width="110">
-        <template #default="scope">
-          <el-button :icon="EditPen" circle size="small" @click="handleEditQuiz(scope.row)" />
-          <el-button type="primary" :icon="QuestionFilled" circle size="small" @click="handleOpenQuestions(scope.row)" title="Quản lý câu hỏi" />
-        </template>
-      </el-table-column>
-    </DataTable>
-  </div>
-
-  <!-- Dialog tạo/sửa Quiz -->
-  <CreateDialog ref="createDialog" v-loading="loading"
-                :title="editingQuiz ? 'Cập nhật Quiz' : 'Tạo mới Quiz'"
-                text-btn-ok="Lưu" :type-action="TypeAction.CREATE" @create="handleCreateQuiz">
-    <FormAddQuiz v-model="dataQuizNeedSave" ref="formSaveQuiz" :lecture-id="selectArgs.lectureIdSelected" />
-  </CreateDialog>
-
-  <!-- Dialog quản lý câu hỏi kiểu Kahoot -->
-  <el-dialog v-model="questionDialogVisible" fullscreen :show-close="false">
+  <el-dialog v-model="visible" fullscreen :show-close="false" v-loading="savingQuestions">
     <template #header>
       <div class="question-dialog-header">
-        <span>Quản lý câu hỏi — {{ currentQuiz?.title }}</span>
+        <span>Quản lý Quiz — {{ quiz?.title }}</span>
         <div style="display:flex;gap:8px">
           <el-button type="primary" :icon="Plus" @click="addQuestion">Thêm câu hỏi</el-button>
           <el-button type="success" :icon="Check" :loading="savingQuestions" @click="handleSaveAllQuestions">Lưu tất cả</el-button>
-          <el-button :icon="Close" @click="questionDialogVisible = false">Đóng</el-button>
+          <el-button :icon="Close" @click="visible = false">Đóng</el-button>
         </div>
       </div>
     </template>
 
     <div class="question-editor">
-      <!-- Sidebar danh sách câu hỏi -->
       <div class="question-sidebar">
         <div
             v-for="(q, idx) in questions"
@@ -81,18 +29,19 @@
         </div>
       </div>
 
-      <!-- Editor câu hỏi hiện tại -->
       <div class="question-main" v-if="currentQuestion">
         <div class="question-canvas">
-          <!-- Ô nhập câu hỏi -->
           <div class="question-input-wrap">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-              <el-select v-model="currentQuestion.type" style="width:160px" size="small">
-                <el-option value="SINGLE" label="Một đáp án đúng" />
-                <el-option value="MULTIPLE" label="Nhiều đáp án đúng" />
-              </el-select>
-              <el-input-number v-model="currentQuestion.score" :min="0.5" :step="0.5" size="small"
-                               placeholder="Điểm" style="width:120px" />
+              <div class="question-footer">
+                <span>Nhiều đáp án đúng:</span>
+                <el-switch
+                    :model-value="currentQuestion.type === 'MULTIPLE'"
+                    @change="(v: boolean) => currentQuestion.type = v ? 'MULTIPLE' : 'SINGLE'" />
+              </div>
+              <el-tag type="info" size="small">
+                Điểm: {{ scorePerQuestion }}
+              </el-tag>
             </div>
             <el-input
                 v-model="currentQuestion.content"
@@ -103,7 +52,6 @@
                 resize="none" />
           </div>
 
-          <!-- 4 ô đáp án -->
           <div class="answers-grid">
             <div
                 v-for="(ans, aIdx) in currentQuestion.answerReqs"
@@ -126,21 +74,11 @@
                   resize="none"
                   @click.stop />
             </div>
-
-            <!-- Nút thêm đáp án nếu < 6 -->
             <div class="answer-card answer-card--add"
                  v-if="currentQuestion.answerReqs.length < 6"
                  @click="addAnswer">
               <el-icon size="28"><Plus /></el-icon>
             </div>
-          </div>
-
-          <!-- Toggle nhiều đáp án đúng -->
-          <div class="question-footer">
-            <span>Nhiều đáp án đúng:</span>
-            <el-switch
-                :model-value="currentQuestion.type === 'MULTIPLE'"
-                @change="(v: boolean) => currentQuestion.type = v ? 'MULTIPLE' : 'SINGLE'" />
           </div>
         </div>
       </div>
@@ -153,138 +91,43 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, reactive, ref, watch, watchEffect } from 'vue'
-  import DataTable from '@/components/datatable/DataTable.vue'
-  import { CirclePlus, Delete, EditPen, Search, Check, Close, Plus, QuestionFilled, CircleCheck } from '@element-plus/icons-vue'
-  import useCourse from '@/composable/useCourse.ts'
-  import useLecture from '@/composable/useLecture..ts'
+  import { computed, ref } from 'vue'
+  import { Check, CircleCheck, Close, Delete, Plus } from '@element-plus/icons-vue'
   import QuizApi from '@/api/QuizApi.ts'
-  import { TypeAction } from '@/enums/TypeAction.ts'
-  import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
-  import FormAddQuiz from '@/views/admin/quiz/FormAddQuiz.vue'
-  import type { QuizReq } from '@/type/req/QuizReq.ts'
   import AlertService from '@/service/AlertService.ts'
-  import { ElMessageBox } from 'element-plus'
-
-  const { listCourse, getListCourse } = useCourse()
-  const { listLectureOfCourse, getListLectureByCourseId } = useLecture()
-  const loading = ref(false)
-  const deleteLoading = ref(false)
-  const savingQuestions = ref(false)
-  const formSaveQuiz = ref<typeof FormAddQuiz | null>(null)
-  const createDialog = ref()
-  const dataTable = ref()
-  const selectedQuizIds = ref<number[]>([])
-  const editingQuiz = ref<any>(null)
-
-  // Quiz questions dialog state
-  const questionDialogVisible = ref(false)
-  const currentQuiz = ref<any>(null)
-  const currentQuestionIdx = ref(0)
 
   interface AnswerDraft { id?: number; content: string; isCorrect: boolean }
   interface QuestionDraft {
     id?: number
     content: string
     type: 'SINGLE' | 'MULTIPLE'
-    score: number
     position: number
     answerReqs: AnswerDraft[]
   }
 
+  const scorePerQuestion = computed(() => {
+    if (questions.value.length === 0) return 0
+    return +(10 / questions.value.length).toFixed(2)
+  })
+
+  const visible = ref(false)
+  const quiz = ref<any>(null)
   const questions = ref<QuestionDraft[]>([])
+  const currentQuestionIdx = ref(0)
+  const savingQuestions = ref(false)
 
   const currentQuestion = computed(() =>
       questions.value.length > 0 ? questions.value[currentQuestionIdx.value] : null
   )
 
-  const selectArgs = reactive({
-    courseIdSelected: null as number | null,
-    keyword: '',
-    lectureIdSelected: null as string | null
-  })
-
-  const dataQuizNeedSave = reactive<QuizReq>({
-    id: null,
-    lectureId: null,
-    title: '',
-    desc: '',
-    maxAttempt: null,
-    timeLimit: null,
-    timeUnit: null
-  })
-
-  // ─── Quiz CRUD ───────────────────────────────────────────────
-  const showFormAddQuiz = () => {
-    editingQuiz.value = null
-    Object.assign(dataQuizNeedSave, { id: null, lectureId: null, title: '', desc: '', maxAttempt: null, timeLimit: null, timeUnit: null })
-    createDialog.value?.show()
-  }
-
-  const handleEditQuiz = (row: any) => {
-    editingQuiz.value = row
-    Object.assign(dataQuizNeedSave, {
-      id: row.id,
-      lectureId: row.lectureId,
-      title: row.title,
-      desc: row.description,
-      maxAttempt: row.maxAttempt,
-      timeLimit: row.timeLimit,
-      timeUnit: row.timeUnit
-    })
-    createDialog.value?.show()
-  }
-
-  const handleCreateQuiz = async () => {
-    const isValid = await formSaveQuiz.value?.validate()
-    if (!isValid) return
-    loading.value = true
-    try {
-      const res = await QuizApi.saveQuiz({
-        id: dataQuizNeedSave.id ?? undefined,
-        lectureId: selectArgs.lectureIdSelected,
-        title: dataQuizNeedSave.title,
-        desc: dataQuizNeedSave.desc,
-        maxAttempt: dataQuizNeedSave.maxAttempt,
-        timeLimit: dataQuizNeedSave.timeLimit,
-        timeUnit: dataQuizNeedSave.timeUnit
-      })
-      if (res.code !== 200) throw new Error(res.message)
-      createDialog.value?.hide()
-      dataTable.value?.reload(dataTable.value?.request)
-      AlertService.success('Thành công', editingQuiz.value ? 'Cập nhật quiz thành công!' : 'Tạo quiz thành công!')
-    } catch (e: any) {
-      AlertService.error('Lỗi', e?.message || 'Có lỗi xảy ra')
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const handleDeleteSelectedQuiz = async () => {
-    try {
-      await ElMessageBox.confirm(`Xóa ${selectedQuizIds.value.length} quiz đã chọn?`, 'Xác nhận', {
-        confirmButtonText: 'Xóa', cancelButtonText: 'Hủy', type: 'warning'
-      })
-      deleteLoading.value = true
-      await QuizApi.deleteQuiz(selectedQuizIds.value)
-      selectedQuizIds.value = []
-      dataTable.value?.reload(dataTable.value?.request)
-    } catch (e: any) {
-      if (e !== 'cancel') AlertService.error('Lỗi', e?.message)
-    } finally {
-      deleteLoading.value = false
-    }
-  }
-
-  // ─── Question editor ─────────────────────────────────────────
-  const handleOpenQuestions = async (quiz: any) => {
-    currentQuiz.value = quiz
+  const open = async (selectedQuiz: any) => {
+    quiz.value = selectedQuiz
     questions.value = []
     currentQuestionIdx.value = 0
-    questionDialogVisible.value = true
+    visible.value = true
 
     try {
-      const res = await QuizApi.getQuestionsByQuiz(quiz.id)
+      const res = await QuizApi.getQuestionsByQuiz(selectedQuiz.id)
       if (res.code === 200 && res.data?.length) {
         questions.value = res.data.map((q: any, idx: number) => ({
           id: q.questionId,
@@ -300,7 +143,7 @@
         }))
       }
     } catch {
-      // Quiz chưa có câu hỏi — bắt đầu với 1 câu trống
+      // Quiz chưa có câu hỏi
     }
   }
 
@@ -308,7 +151,6 @@
     questions.value.push({
       content: '',
       type: 'SINGLE',
-      score: 1,
       position: questions.value.length + 1,
       answerReqs: [
         { content: '', isCorrect: false },
@@ -338,16 +180,14 @@
   const toggleCorrect = (aIdx: number) => {
     if (!currentQuestion.value) return
     if (currentQuestion.value.type === 'SINGLE') {
-      // Single: chỉ 1 đáp án đúng
       currentQuestion.value.answerReqs.forEach((a, i) => { a.isCorrect = i === aIdx })
     } else {
-      // Multiple: toggle
       currentQuestion.value.answerReqs[aIdx].isCorrect = !currentQuestion.value.answerReqs[aIdx].isCorrect
     }
   }
 
   const handleSaveAllQuestions = async () => {
-    if (!currentQuiz.value) return
+    if (!quiz.value) return
     if (questions.value.length === 0) {
       AlertService.error('Lỗi', 'Cần có ít nhất 1 câu hỏi')
       return
@@ -366,12 +206,12 @@
     savingQuestions.value = true
     try {
       const res = await QuizApi.saveQuestions({
-        quizId: currentQuiz.value.id,
+        quizId: quiz.value.id,
         questions: questions.value.map((q, idx) => ({
           id: q.id ?? undefined,
           content: q.content,
           type: q.type,
-          score: q.score,
+          score: scorePerQuestion.value,
           position: idx + 1,
           answerReqs: q.answerReqs.map(a => ({
             id: a.id ?? undefined,
@@ -382,27 +222,14 @@
       })
       if (res.code !== 200) throw new Error(res.message)
       AlertService.success('Thành công', 'Đã lưu tất cả câu hỏi')
+      visible.value = false   // 👈 đóng dialog
     } catch (e: any) {
       AlertService.error('Lỗi', e?.message || 'Lưu câu hỏi thất bại')
     } finally {
       savingQuestions.value = false
     }
   }
-
-  // ─── Filter & watch ───────────────────────────────────────────
-  const handleFilter = async (params: any) => {
-    return await QuizApi.getQuizByCourse({
-      ...params,
-      courseId: selectArgs.courseIdSelected,
-      keyword: selectArgs.keyword
-    })
-  }
-
-  watchEffect(async () => { await getListCourse() })
-
-  watch(() => selectArgs.courseIdSelected, async (val) => {
-    if (val) await getListLectureByCourseId(val)
-  })
+  defineExpose({ open })
 </script>
 
 <style scoped lang="scss">
@@ -416,7 +243,6 @@
     }
   }
 
-  // ── Question dialog ──────────────────────────────────────
   .question-dialog-header {
     display: flex;
     align-items: center;
@@ -637,7 +463,6 @@
     background: #2d1b69;
   }
 
-  // Dialog override
   :deep(.el-dialog__body) { padding: 0; }
   :deep(.el-dialog__header) { padding: 16px 20px; border-bottom: 1px solid #eee; }
 </style>

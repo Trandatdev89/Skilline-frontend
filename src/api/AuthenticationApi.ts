@@ -1,16 +1,16 @@
 import type { ApiResponse } from '@/type/ApiResponse'
-import { httpApi } from '@/utils/httpApi.ts'
-import type { TokenType } from '@/enums/TokenType.ts'
+import { httpApi } from '@/utils/httpApi'
+import { refreshApi } from '@/utils/refreshApi'
+import type { TokenType } from '@/enums/TokenType'
 
 class AuthenticationApi {
 
   async login(dataLogin: any): Promise<ApiResponse<any>> {
-    const response: ApiResponse<any> = await httpApi.post('/auth/login', dataLogin, {
+    return await httpApi.post('/auth/login', dataLogin, {
       headers: {
         'Content-Type': 'application/json'
       }
     })
-    return response
   }
 
   async checkAuthentication(tokenType: TokenType): Promise<ApiResponse<any>> {
@@ -26,18 +26,13 @@ class AuthenticationApi {
   }
 
   async refreshToken(): Promise<ApiResponse<any>> {
-    return await httpApi.post('/auth/refresh-token')
-  }
-
-  async getUserInfo(): Promise<ApiResponse<any>> {
-    return await httpApi.get('/auth/me')
+    const response = await refreshApi.post('/auth/refresh-token')
+    return response.data
   }
 
   async getCsrfToken() {
     return await httpApi.get('/auth/csrf-token')
   }
-
-
 }
 
 export default new AuthenticationApi()

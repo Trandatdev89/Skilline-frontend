@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
-import AuthenticationApi from '@/api/AuthenticationApi.ts'
-import { TokenType } from '@/enums/TokenType.ts'
-
+import UserApi from '@/api/UserApi.ts'
 
 const useAuthentication = defineStore('useAuthentication', () => {
 
@@ -11,40 +9,38 @@ const useAuthentication = defineStore('useAuthentication', () => {
       isAuthenticated: false,
       name: '',
       role: '',
-      avatar: null
+      avatar: null,
+      email:'',
+      phone:''
     })
 
-    const isLoading = ref<boolean>(false)
-    const lastFetchTime = ref<number>(0)
-    const CACHE_DURATION = 5 * 60 * 1000 //5 phut
+    const initialized = ref(false)
 
-    const isAuthentication = async () => {
+    const isLoading = ref<boolean>(false)
+
+    const initialize = async () => {
+
+      if (initialized.value) {
+        return
+      }
+
+      initialized.value = true
+
       try {
-        const res = await AuthenticationApi.checkAuthentication(TokenType.ACCESS_TOKEN) // server tự đọc cookie
-        if (res?.code !== 200) {
-          throw new Error(res.message)
-        }
-        return res.data
-      } catch (e) {
+        await fetchCurrentInfoUser()
+      } catch {
         resetUserInfo()
-        return false
       }
     }
 
-    const fetchCurrentInfoUser = async (forceRefresh = false) => {
+    const fetchCurrentInfoUser = async () => {
       try {
-        const now = Date.now()
-        if (!forceRefresh && now - lastFetchTime.value < CACHE_DURATION) {
-          return true
-        }
-
         isLoading.value = true
-        const res = await AuthenticationApi.getUserInfo()
+        const res = await UserApi.getDetail();
         if (res?.code !== 200) {
           throw new Error(res.message)
         }
         setAuthToken(res.data)
-        lastFetchTime.value = now // ✅ Update cache time
         return true
       } catch (e) {
         resetUserInfo()
@@ -60,6 +56,8 @@ const useAuthentication = defineStore('useAuthentication', () => {
       userInfo.name = ''
       userInfo.role = ''
       userInfo.avatar = null
+      userInfo.email=''
+      userInfo.phone=''
     }
 
     const setAuthToken = (value: any) => {
@@ -68,16 +66,17 @@ const useAuthentication = defineStore('useAuthentication', () => {
       userInfo.name = value.username
       userInfo.role = value.role
       userInfo.avatar = value.avatar
+      userInfo.email=value.email
+      userInfo.phone=value.phone
     }
 
     const logout = () => {
       isLoading.value = true
       resetUserInfo()
-      localStorage.removeItem('userInfo')
       isLoading.value = false
     }
 
-    return { userInfo, isAuthentication, logout, setAuthToken, isLoading, fetchCurrentInfoUser, resetUserInfo }
+    return { userInfo, logout, setAuthToken, isLoading, fetchCurrentInfoUser, resetUserInfo,initialize }
   },
   {
     persist: {

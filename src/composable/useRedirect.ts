@@ -24,7 +24,11 @@ const useRedirect = ()=>{
     await route.push(pages.home);
   }
 
-  return {handleRedirect};
+  const redirectCourse = async () => {
+    await route.push(pages.course);
+  }
+
+  return {handleRedirect,redirectCourse};
 };
 
 export default useRedirect;

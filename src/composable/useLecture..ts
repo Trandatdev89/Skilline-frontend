@@ -11,11 +11,12 @@ const useLecture= ()=>{
 
   const getListLectureByCourseId = async (courseId:number)=>{
     resetLoadMore()
+    console.log("abc");
     await loadMoreData((req: RequestParam) => {
       req.courseId = courseId;
-      console.log('abc')
       return LectureApi.getLecturesByCourseId(req);
     });
+    console.log(data.value);
     listLectureOfCourse.value = data.value;
   }
 

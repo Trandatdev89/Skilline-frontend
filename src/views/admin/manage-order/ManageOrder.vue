@@ -54,11 +54,11 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import DataTable from '@/components/datatable/DataTable.vue'
-  import orderApi from '@/api/OrderApi.ts'
-  import { MenuActionOrder } from '@/common/MenuActionOrder.ts'
-  import { TypeAction } from '@/enums/TypeAction.ts'
+  import orderApi from '@/api/OrderApi.js'
+  import { MenuActionOrder } from '@/common/MenuActionOrder.js'
+  import { TypeAction } from '@/enums/TypeAction.js'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
-  import ManageCourse from '@/views/admin/ManageCourse.vue'
+  import ManageCourse from '@/views/admin/manage-course/ManageCourse.vue'
 
   const dataTable = ref()
   const componentDetail = ref();

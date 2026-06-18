@@ -14,7 +14,7 @@
   import type { TabsPaneContext } from 'element-plus'
   import { ref } from 'vue'
   import ConfigNotification from '@/views/admin/config/ConfigNotification.vue'
-  import ConfigCpu from './config/ConfigCpu.vue'
+  import ConfigCpu from './ConfigCpu.vue'
   import ConfigPolicy from '@/views/admin/config/ConfigPolicy.vue'
 
   const listTab = [

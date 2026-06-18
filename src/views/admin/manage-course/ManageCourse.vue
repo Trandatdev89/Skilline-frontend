@@ -26,7 +26,9 @@
       <el-button @click="handleShowCreateCourse" :icon="CirclePlus">Thêm khóa học</el-button>
     </div>
     <div class="course__table">
-      <DataTable ref="dataTable" :get-data-function="getListCourse"
+      <DataTable ref="dataTable"
+                 v-if="categoryLoaded"
+                 :get-data-function="getListCourse"
                  @selection-change="(rows: any[]) => selectedIds = rows.map(r => r.id)">
         <el-table-column type="selection" width="50" />
         <el-table-column prop="id" label="ID" width="60" />
@@ -55,7 +57,6 @@
           </template>
         </el-table-column>
         <el-table-column prop="rate" label="Đánh giá" />
-        <el-table-column prop="categoryId" label="Danh mục" />
         <el-table-column prop="thumbnail_url" label="Ảnh">
           <template #default="scope">
             <el-image
@@ -105,14 +106,14 @@
   import { nextTick, onMounted, reactive, ref, watch } from 'vue'
   import DataTable from '@/components/datatable/DataTable.vue'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
-  import LevelStudent from '@/enums/LevelStudent.ts'
-  import CourseApi from '@/api/CourseApi.ts'
+  import LevelStudent from '@/enums/LevelStudent.js'
+  import CourseApi from '@/api/CourseApi.js'
   import { CirclePlus, Delete, EditPen, Picture } from '@element-plus/icons-vue'
-  import useCourse from '@/composable/useCourse.ts'
-  import useCategory from '@/composable/useCategory.ts'
-  import { TypeAction } from '@/enums/TypeAction.ts'
+  import useCourse from '@/composable/useCourse.js'
+  import useCategory from '@/composable/useCategory.js'
+  import { TypeAction } from '@/enums/TypeAction.js'
   import FormSaveCourse from '@/components/form/FormSaveCourse.vue'
-  import type { CourseReq } from '@/type/req/CourseReq.ts'
+  import type { CourseReq } from '@/type/req/CourseReq.js'
   import { useRoute } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
 
@@ -128,9 +129,9 @@
   const formSaveCourse = ref()
   const route = useRoute()
   const isEdit = ref(false)
-
   const selectedIds = ref<number[]>([])
   const deleteLoading = ref(false)
+  const categoryLoaded = ref(false)
 
   const handleDeleteOne = async (id: number) => {
     try {
@@ -169,8 +170,7 @@
     desc: '',
     level: LevelStudent.BEGINNER,
     price: null,
-    assetId: null,
-    thumbnailFile: null,
+    thumbnail: null,
     thumbnailPreviewUrl: null,
     categoryId: categoryIdSelected?.value,
     discount: null,
@@ -194,8 +194,7 @@
     course.accessDurationValue = row.accessDurationValue ?? null
     course.accessDurationUnit = row.expireUnit ?? null
     course.thumbnailPreviewUrl = row.thumbnail_url ?? null
-    course.assetId = row.thumbnailAssetId ?? null
-    course.thumbnailFile = null
+    course.thumbnail = null
     createDialog.value?.show()
   }
 
@@ -205,29 +204,31 @@
 
   const handleCreateCourse = async () => {
 
-    console.log('Course data to save:', course)
-
     const isValid = formSaveCourse.value?.validate()
     if (!isValid) {
       return
     }
     loading.value = true
 
+
+
     try {
-      await saveCourse({
-        id: course.id ?? undefined,
-        title: course.title,
-        description: course.desc,
-        level: course.level,
-        price: course.price,
-        categoryId: course.categoryId,
-        rate: course.rate,
-        discount: course.discount,
-        assetId: course.assetId ?? undefined,
-        publishStatus: course.publishStatus ?? undefined,
-        accessDurationValue: course.accessDurationValue ?? undefined,
-        accessDurationUnit: course.accessDurationUnit ?? undefined
-      })
+      const formData = new FormData()
+
+      if (course.id) formData.append('id', String(course.id))
+      formData.append('title', course.title)
+      formData.append('description', course.desc)
+      formData.append('level', course.level)
+      if (course.price !== null) formData.append('price', String(course.price))
+      if (course.categoryId !== null) formData.append('categoryId', String(course.categoryId))
+      if (course.rate !== null) formData.append('rate', String(course.rate))
+      if (course.discount !== null) formData.append('discount', String(course.discount))
+      if (course.publishStatus) formData.append('publishStatus', course.publishStatus)
+      if (course.accessDurationValue !== null) formData.append('accessDurationValue', String(course.accessDurationValue))
+      if (course.accessDurationUnit) formData.append('accessDurationUnit', course.accessDurationUnit)
+      if (course.thumbnail) formData.append('thumbnail', course.thumbnail) // File object
+
+      await saveCourse(formData)
       formSaveCourse.value?.resetFields()
       createDialog.value?.hide()
       dataTable.value?.reload(dataTable.value?.request)
@@ -253,14 +254,12 @@
   const handleVisibleChange = async (visible: boolean) => {
     if (visible) {
       await nextTick()
-      // Tìm dropdown element
       const dropdown = document.querySelector('.el-select-dropdown__wrap')
       if (dropdown) {
         selectDropdown.value = dropdown as HTMLElement
         dropdown.addEventListener('scroll', handleScroll, { passive: true })
       }
     } else {
-      // Remove listener khi đóng dropdown
       if (selectDropdown.value) {
         selectDropdown.value.removeEventListener('scroll', handleScroll)
       }
@@ -273,8 +272,7 @@
     course.desc = ''
     course.level = LevelStudent.BEGINNER
     course.price = null
-    course.assetId = null
-    course.thumbnailFile = null
+    course.thumbnail = null
     course.thumbnailPreviewUrl = null
     course.discount = null
     course.rate = 5
@@ -309,6 +307,7 @@
     if (listCategory.value.length > 0) {
       categoryIdSelected.value = listCategory.value[0].id
     }
+    categoryLoaded.value = true
   })
 </script>
 

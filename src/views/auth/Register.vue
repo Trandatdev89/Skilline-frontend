@@ -1,5 +1,5 @@
 <template>
-  <section class="h-100">
+  <section class="h-100" style="margin: 120px 0">
     <div class="container py-5 h-100">
       <div class="row d-flex justify-content-center align-items-center h-100">
         <div class="col">
@@ -71,13 +71,12 @@
 <script setup lang="ts">
   import { FormInstance } from 'element-plus'
   import { reactive, ref } from 'vue'
-  // import { register } from '../services/AuthService'
   import { useRouter } from 'vue-router'
   import AuthenticationApi from '@/api/AuthenticationApi.ts'
   import AlertService from '@/service/AlertService.ts'
   import { RoleType } from '@/enums/RoleType.ts'
 
-  const ruleFormRef = ref<FormInstance>() //Lay ra cai the form tuong ung trong vueJs
+  const ruleFormRef = ref<FormInstance>()
   const data = reactive<any>({
     username: '',
     password: '',
@@ -85,7 +84,7 @@
     phone: '',
     email: '',
     address: '',
-    role:RoleType.TEACHER
+    role:RoleType.USER
   });
 
   const router = useRouter()

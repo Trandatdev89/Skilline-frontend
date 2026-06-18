@@ -6,7 +6,10 @@
     <el-form-item label-position="top" label="Tiêu đề danh mục" prop="title">
       <el-input v-model="modelValue.title" />
     </el-form-item>
-    <el-form-item label-position="top" label="Ảnh danh mục">
+    <el-form-item
+        label-position="top"
+        label="Ảnh danh mục">
+
       <el-upload
           ref="inputUpload"
           :limit="1"
@@ -14,18 +17,14 @@
           :show-file-list="false"
           accept="image/*"
           @change="handleProcessFile">
-        <el-button :icon="Upload" :loading="uploading">
-          {{ uploading ? `Đang upload... ${uploadPercent}%` : 'Chọn ảnh' }}
-        </el-button>
-      </el-upload>
-    </el-form-item>
 
-    <!-- Progress bar -->
-    <el-progress
-        v-if="uploading"
-        :percentage="uploadPercent"
-        :stroke-width="6"
-        style="margin-bottom: 12px" />
+        <el-button :icon="Upload">
+          Chọn ảnh
+        </el-button>
+
+      </el-upload>
+
+    </el-form-item>
   </el-form>
 
   <!-- Preview ảnh -->
@@ -38,107 +37,117 @@
 </template>
 
 <script setup lang="ts">
-  import { reactive, ref, watch } from 'vue'
-  import type { FormInstance, FormRules, UploadInstance } from 'element-plus'
-  import { Upload } from '@element-plus/icons-vue'
-  import MediaApi from '@/api/MediaApi.ts'
-  import AlertService from '@/service/AlertService.ts'
+  import { ref, reactive, watch } from 'vue'
+  import type {
+    FormInstance,
+    FormRules,
+    UploadInstance
+  } from 'element-plus'
 
-  const imgUpload = ref<string>('')
-  const uploading = ref(false)
-  const uploadPercent = ref(0)
-  const inputUpload = ref<UploadInstance>();
+  import { Upload } from '@element-plus/icons-vue'
+
+  const imgUpload = ref('')
+
+  const inputUpload = ref<UploadInstance>()
 
   const formRef = ref<FormInstance>()
+
   const rules = reactive<FormRules>({
-    title: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }]
+    title: [
+      {
+        required: true,
+        message: 'Trường này bắt buộc',
+        trigger: 'blur'
+      }
+    ]
   })
 
   const modelValue = defineModel<{
     id: number | null
     title: string
-    assetId: string | null
+    file: File | null
     imgPreviewUrl: string | null
-  }>({ required: true })
+  }>({
+    required: true
+  })
 
-  /**
-   * Khi người dùng chọn ảnh:
-   * 1. Preview ngay
-   * 2. Upload lên S3 qua presigned URL
-   * 3. Lưu assetId vào modelValue
-   */
-  const handleProcessFile = async (file: any) => {
-    console.log("ANC")
-    if (!file?.raw) return
+  const handleProcessFile = (file: any) => {
+
+    if (!file?.raw) {
+      return
+    }
 
     const rawFile: File = file.raw
 
-    console.log(rawFile);
-
-    // Preview ngay
-    if (imgUpload.value?.startsWith('blob:')) URL.revokeObjectURL(imgUpload.value)
-    imgUpload.value = URL.createObjectURL(rawFile)
-    modelValue.value.assetId = null
-
-    uploading.value = true
-    uploadPercent.value = 0
-
-    try {
-      const assetId = await MediaApi.uploadFile(rawFile, 'IMAGE', (percent) => {
-        uploadPercent.value = percent
-      })
-      modelValue.value.assetId = assetId
-      AlertService.success('Upload thành công', 'Ảnh đã được tải lên')
-    } catch (error: any) {
-      AlertService.error('Upload thất bại', error?.message || 'Có lỗi xảy ra khi upload ảnh')
-      handleRemoveFile()
-    } finally {
-      uploading.value = false
-      inputUpload.value?.clearFiles();
+    if (imgUpload.value?.startsWith('blob:')) {
+      URL.revokeObjectURL(imgUpload.value)
     }
+
+    imgUpload.value = URL.createObjectURL(rawFile)
+
+    modelValue.value.file = rawFile
   }
 
   const handleRemoveFile = () => {
-    if (imgUpload.value?.startsWith('blob:')) URL.revokeObjectURL(imgUpload.value)
+
+    if (imgUpload.value?.startsWith('blob:')) {
+      URL.revokeObjectURL(imgUpload.value)
+    }
+
     imgUpload.value = ''
-    modelValue.value.assetId = null
+
+    modelValue.value.file = null
     modelValue.value.imgPreviewUrl = null
-    inputUpload.value?.clearFiles();
+
+    inputUpload.value?.clearFiles()
   }
 
   const validate = async (): Promise<boolean> => {
-    if (!formRef.value) return false
+
+    if (!formRef.value) {
+      return false
+    }
+
     try {
+
       await formRef.value.validate()
+
       return true
-    } catch (error) {
+
+    } catch {
+
       return false
     }
   }
 
   const resetFields = () => {
+
     formRef.value?.resetFields()
+
     handleRemoveFile()
   }
 
-  // Khi edit: hiện ảnh cũ từ server
-  // deep+immediate để catch cả trường hợp dialog mở lại với data mới
   watch(
       () => modelValue.value.imgPreviewUrl,
       (url) => {
-        // Chỉ set khi không đang preview blob (tức là chưa upload ảnh mới)
+
         if (url && !imgUpload.value.startsWith('blob:')) {
           imgUpload.value = url
         }
-        // Nếu url bị clear (resetData) thì xóa preview luôn
+
         if (!url && !imgUpload.value.startsWith('blob:')) {
           imgUpload.value = ''
         }
       },
-      { immediate: true, deep: true }
+      {
+        immediate: true
+      }
   )
 
-  defineExpose({ validate, resetFields })
+  defineExpose({
+    validate,
+    resetFields
+  })
 </script>
 
 <style scoped lang="scss"></style>

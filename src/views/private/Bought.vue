@@ -29,7 +29,7 @@
 import { useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue'
 import CardUi from '@/components/card/CardUi.vue'
-import EnrollmentApi from '@/api/EnrollmentApi.ts'
+import EnrollmentApi from '@/api/EnrollmentApi.js'
 
 const router = useRouter()
 

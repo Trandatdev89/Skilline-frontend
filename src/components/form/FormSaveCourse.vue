@@ -70,13 +70,14 @@
           :show-file-list="false"
           accept="image/*"
           @change="handleProcessFile">
-        <el-button type="primary" :loading="uploading">
-          {{ uploading ? `Đang upload... ${uploadPercent}%` : 'Chọn ảnh' }}
+
+        <el-button type="primary">
+          Chọn ảnh
         </el-button>
+
       </el-upload>
     </el-form-item>
 
-    <el-progress v-if="uploading" :percentage="uploadPercent" :stroke-width="6" style="margin-bottom: 12px" />
   </el-form>
 
   <!-- Preview ảnh -->
@@ -93,12 +94,8 @@
   import { reactive, ref, watch } from 'vue'
   import type { FormInstance, FormRules, UploadInstance } from 'element-plus'
   import type { CourseReq } from '@/type/req/CourseReq.ts'
-  import MediaApi from '@/api/MediaApi.ts'
-  import AlertService from '@/service/AlertService.ts'
 
   const imgPreview = ref<string>('')
-  const uploading = ref(false)
-  const uploadPercent = ref(0)
 
   const formRef = ref<FormInstance>()
   const inputUpload = ref<UploadInstance>()
@@ -112,36 +109,29 @@
     price: [{ required: true, message: 'Trường này bắt buộc', trigger: 'blur' }]
   })
 
-  const handleProcessFile = async (file: any) => {
-    if (!file?.raw) return
+  const handleProcessFile = (file: any) => {
+
+    if (!file?.raw) {
+      return
+    }
+
     const rawFile: File = file.raw
 
-    imgPreview.value = URL.createObjectURL(rawFile)
-    modelValue.value.thumbnailFile = rawFile
-    modelValue.value.assetId = null
-    uploading.value = true
-    uploadPercent.value = 0
-
-    try {
-      const assetId = await MediaApi.uploadFile(rawFile, 'IMAGE', (percent) => {
-        uploadPercent.value = percent
-      })
-      modelValue.value.assetId = assetId
-      AlertService.success('Upload thành công', 'Ảnh đã được tải lên')
-    } catch (error: any) {
-      AlertService.error('Upload thất bại', error?.message || 'Có lỗi xảy ra khi upload ảnh')
-      handleRemoveFile()
-    } finally {
-      uploading.value = false
-      inputUpload.value?.clearFiles()
+    if (imgPreview.value?.startsWith('blob:')) {
+      URL.revokeObjectURL(imgPreview.value)
     }
+
+    imgPreview.value = URL.createObjectURL(rawFile)
+
+    modelValue.value.thumbnail = rawFile
   }
 
   const handleRemoveFile = () => {
-    if (imgPreview.value?.startsWith('blob:')) URL.revokeObjectURL(imgPreview.value)
+    if (imgPreview.value?.startsWith('blob:')) {
+      URL.revokeObjectURL(imgPreview.value)
+    }
     imgPreview.value = ''
-    modelValue.value.thumbnailFile = null
-    modelValue.value.assetId = null
+    modelValue.value.thumbnail = null
     modelValue.value.thumbnailPreviewUrl = null
     inputUpload.value?.clearFiles()
   }

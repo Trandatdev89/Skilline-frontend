@@ -4,10 +4,10 @@
 
 <script lang="ts" setup>
   import { onMounted } from 'vue'
-  import useAuthentication from '@/stores/Authentication.ts'
-  import AlertService from '@/service/AlertService.ts'
+  import useAuthentication from '@/stores/Authentication.js'
+  import AlertService from '@/service/AlertService.js'
   import { useRouter } from 'vue-router'
-  import UserApi from '@/api/UserApi.ts'
+  import UserApi from '@/api/UserApi.js'
 
   const router = useRouter()
   const { logout, isLoading } = useAuthentication()

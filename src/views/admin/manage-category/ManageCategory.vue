@@ -67,13 +67,13 @@
   import { reactive, ref, watch } from 'vue'
   import DataTable from '@/components/datatable/DataTable.vue'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
-  import AlertService from '@/service/AlertService.ts'
-  import CategoryApi from '@/api/CategoryApi.ts'
+  import AlertService from '@/service/AlertService.js'
+  import CategoryApi from '@/api/CategoryApi.js'
   import { RefreshLeft, CirclePlus, Delete, EditPen, Picture } from '@element-plus/icons-vue'
   import { useRoute } from 'vue-router'
-  import type { RequestParam } from '@/type/RequestParam.ts'
+  import type { RequestParam } from '@/type/RequestParam.js'
   import FormSaveCategory from '@/components/form/FormSaveCategory.vue'
-  import { TypeAction } from '@/enums/TypeAction.ts'
+  import { TypeAction } from '@/enums/TypeAction.js'
   import { ElMessageBox } from 'element-plus'
 
   const route = useRoute()
@@ -88,17 +88,18 @@
   const category = reactive({
     id: null as number | null,
     title: '',
-    assetId: null as string | null,
+    file: null as File | null,
     imgPreviewUrl: null as string | null
   })
 
   const updateCategory = (row: any) => {
+
     isEdit.value = true
     category.id = row.id
     category.title = row.name
-    category.imgPreviewUrl = row.urlThumbnail ?? null
-    // Giữ assetId cũ — nếu user không upload ảnh mới thì BE giữ ảnh cũ
-    category.assetId = row.thumbnailAssetId ?? null
+    category.file = null
+    category.imgPreviewUrl =
+        row.urlThumbnail ?? null
     createDialog.value?.show()
   }
 
@@ -108,26 +109,68 @@
   }
 
   const handleCreateCate = async () => {
-    const isValid = await createCateForm.value?.validate()
-    if (!isValid) return
+
+    const isValid =
+        await createCateForm.value?.validate()
+
+    if (!isValid) {
+      return
+    }
 
     loading.value = true
+    const formData = new FormData();
+    if (category.id) {
+      formData.append(
+          'id',
+          String(category.id)
+      )
+    }
+
+    formData.append(
+        'name',
+        category.title
+    )
+
+    if (category.file) {
+      formData.append(
+          'path',
+          category.file
+      )
+    }
+
     try {
-      const res = await CategoryApi.save({
-        id: category.id ?? undefined,
-        name: category.title,
-        assetId: category.assetId ?? undefined
-      })
-      if (res.code !== 200) throw new Error(res.message)
+
+      const res =
+          await CategoryApi.save(formData);
+
+      if (res.code !== 200) {
+        throw new Error(res.message)
+      }
 
       resetData()
       createCateForm.value?.resetFields()
-      dataTable.value?.reload(dataTable.value?.request)
+      dataTable.value?.reload(
+          dataTable.value?.request
+      )
+
       createDialog.value?.hide()
-      AlertService.success('Thành công', isEdit.value ? 'Cập nhật danh mục thành công!' : 'Thêm danh mục thành công!')
+
+      AlertService.success(
+          'Thành công',
+          isEdit.value
+              ? 'Cập nhật danh mục thành công!'
+              : 'Thêm danh mục thành công!'
+      )
+
     } catch (error: any) {
-      AlertService.error('Lỗi', error?.message || 'Có lỗi xảy ra')
+
+      AlertService.error(
+          'Lỗi',
+          error?.message || 'Có lỗi xảy ra'
+      )
+
     } finally {
+
       loading.value = false
     }
   }
@@ -173,7 +216,7 @@
     isEdit.value = false
     category.id = null
     category.title = ''
-    category.assetId = null
+    category.file = null
     category.imgPreviewUrl = null
   }
 

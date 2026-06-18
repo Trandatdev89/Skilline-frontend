@@ -73,7 +73,7 @@
                 :type-action="TypeAction.CREATE"
                 @cancel="resetData"
                 @create="handleCreateLecture">
-    <FormSaveLecture :model-value="lecture" ref="formSaveLecture"/>
+    <FormSaveLecture :previewVideoFromDB="previewVideo" :model-value="lecture" ref="formSaveLecture"/>
   </CreateDialog>
 </template>
 
@@ -81,14 +81,14 @@
   import { onMounted, reactive, ref, watch } from 'vue'
   import DataTable from '@/components/datatable/DataTable.vue'
   import CreateDialog from '@/components/dialog/common/CreateDialog.vue'
-  import LectureApi from '@/api/LectureApi.ts'
+  import LectureApi from '@/api/LectureApi.js'
   import { RefreshLeft, Picture, Delete, EditPen, CirclePlus } from '@element-plus/icons-vue'
-  import useCourse from '@/composable/useCourse.ts'
+  import useCourse from '@/composable/useCourse.js'
   import FormSaveLecture from '@/components/form/FormSaveLecture.vue'
-  import { TypeAction } from '@/enums/TypeAction.ts'
-  import useLecture from '@/composable/useLecture..ts'
+  import { TypeAction } from '@/enums/TypeAction.js'
+  import useLecture from '@/composable/useLecture..js'
   import { useRoute } from 'vue-router'
-  import type { RequestParam } from '@/type/RequestParam.ts'
+  import type { RequestParam } from '@/type/RequestParam.js'
   import { ElMessageBox } from 'element-plus'
 
   const dataTable = ref<InstanceType<typeof DataTable> | null>(null)
@@ -97,12 +97,13 @@
   const courseIdSelected = ref(1)
   const formSaveLecture = ref<InstanceType<typeof FormSaveLecture> | null>(null);
   const { listCourse, getListCourseByMySelf } = useCourse()
-  const {listLectureOfCourse,saveLectureByCourseId} = useLecture();
+  const {saveLectureByCourseId} = useLecture();
   const isEdit = ref(false)
   const route = useRoute()
 
   const selectedIds = ref<string[]>([])
   const deleteLoading = ref(false)
+  const previewVideo = ref();
 
   const handleDeleteOne = async (id: string) => {
     try {
@@ -143,19 +144,21 @@
     thumbnailAssetId: null as string | null,
     durationSeconds: null as number | null,
     previewable: false,
-    publishStatus: null as string | null
+    publishStatus: null as string | null,
+    videoFile:null
   })
 
   const updateCourse = (row: any) => {
     isEdit.value = true
     lecture.id = row.id
-    lecture.courseId = row.courseId
+    lecture.courseId = courseIdSelected.value
     lecture.title = row.title
     lecture.contentAssetId = row.contentAssetId ?? null
     lecture.thumbnailAssetId = row.thumbnailAssetId ?? null
     lecture.durationSeconds = row.durationSeconds ?? null
     lecture.previewable = row.previewable ?? false
     lecture.publishStatus = row.publishStatus ?? null
+    previewVideo.value = row.urlVideo ?? null
     createDialog.value?.show()
   }
 
@@ -174,17 +177,19 @@
 
     loading.value = true
     try {
-      // Gửi JSON — backend nhận contentAssetId và thumbnailAssetId, không nhận file trực tiếp nữa
-      await saveLectureByCourseId({
-        id: lecture.id ?? undefined,
-        title: lecture.title,
-        courseId: lecture.courseId,
-        contentAssetId: lecture.contentAssetId ?? undefined,
-        thumbnailAssetId: lecture.thumbnailAssetId ?? undefined,
-        durationSeconds: lecture.durationSeconds ?? undefined,
-        previewable: lecture.previewable,
-        publishStatus: lecture.publishStatus ?? undefined
-      })
+
+
+      const formData = new FormData()
+
+      if (lecture.id) formData.append('id', String(lecture.id))
+      formData.append('title', lecture.title)
+      formData.append('courseId', String(lecture.courseId))
+      if (lecture.previewable !== null) formData.append('previewable', String(lecture.previewable))
+      if (lecture.publishStatus) formData.append('publishStatus', lecture.publishStatus)
+      if (lecture.durationSeconds) formData.append('durationSeconds', String(lecture.durationSeconds))
+      if (lecture.videoFile) formData.append('videoFile', lecture.videoFile)
+
+      await saveLectureByCourseId(formData)
 
       resetData()
       formSaveLecture.value?.resetFields()
@@ -207,6 +212,7 @@
     lecture.durationSeconds = null
     lecture.previewable = false
     lecture.publishStatus = null
+    previewVideo.value = null
   }
 
 

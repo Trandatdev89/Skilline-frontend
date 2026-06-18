@@ -1,14 +1,5 @@
 <template>
   <div class="dashboard">
-    <!-- Header -->
-    <header class="dashboard-header">
-      <h2>Trang Điều Khiển</h2>
-      <nav class="breadcrumb">
-        <a href="#">Home</a> / <span>Dashboard</span>
-      </nav>
-    </header>
-
-    <!-- Stats Cards -->
     <section class="stats-grid">
       <StatCard color="purple" title="Khách hàng" value="12" change="-12.4%" direction="down" />
       <StatCard color="blue" title="Sản phẩm" value="10.4%" change="40.9%" direction="up" />

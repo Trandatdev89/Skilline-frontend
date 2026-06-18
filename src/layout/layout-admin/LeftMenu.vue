@@ -75,8 +75,7 @@
     { id: 4, title: "Quản lý đơn hàng", icon: Tickets, link: "/admin/order", role: [RoleType.TEACHER, RoleType.ADMIN] },
     { id: 5, title: "Quản lý bài học", icon: VideoPlay, link: "/admin/lecture", role: [RoleType.TEACHER, RoleType.ADMIN] },
     { id: 6, title: "Quản lý quiz", icon: QuestionFilled, link: "/admin/quiz", role: [RoleType.ADMIN, RoleType.TEACHER] },
-    { id: 7, title: "Quản lý học viên", icon: User, link: "/admin/setting", role: [RoleType.TEACHER] },
-    { id: 8, title: "Quản lý tài khoản", icon: User, link: "/admin/setting", role: [RoleType.ADMIN] },
+    { id: 7, title: "Quản lý học viên", icon: User, link: "/admin/account", role: [RoleType.TEACHER,RoleType.ADMIN] },
     { id: 9, title: "Cài đặt", icon: Setting, link: "/admin/setting", role: [RoleType.ADMIN] },
   ]
 

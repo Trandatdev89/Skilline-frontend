@@ -3,8 +3,8 @@ import { httpApi } from '@/utils/httpApi.ts'
 
 class UserApi{
 
-  async getInfo(): Promise<ApiResponse<any>>{
-    return await httpApi.get(`/api/user/info`)
+  async getDetail(): Promise<ApiResponse<any>>{
+    return await httpApi.get(`/api/user/me`)
   }
 
   async updateInfo(data:any): Promise<ApiResponse<any>>{

@@ -7,17 +7,17 @@ export interface CourseReq {
   id: number | null
   title: string
   desc: string
-  level: LevelStudent
+  level: string
   price: number | null
-  discount: number | null
-  categoryId: number | null
-  rate: number
-  // Các field mới tương ứng BE
-  publishStatus: PublishStatus | null
-  accessDurationValue: number | null
-  accessDurationUnit: ExpireUnit | null
-  // Presigned upload
-  assetId: string | null
-  thumbnailFile: File | null
+
+  thumbnail: File | null
   thumbnailPreviewUrl: string | null
+
+  categoryId: number | null
+  discount: number | null
+  rate: number
+
+  publishStatus: string | null
+  accessDurationValue: number | null
+  accessDurationUnit: string | null
 }
