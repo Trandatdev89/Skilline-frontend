@@ -9,6 +9,7 @@ import App from './App.vue'
 import router from './router/route.ts'
 import ElementPlus from 'element-plus'
 import 'video.js/dist/video-js.css'
+import AuthenticationApi from '@/api/AuthenticationApi.ts'
 
 const app = createApp(App)
 
@@ -17,6 +18,8 @@ pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 app.use(ElementPlus)
 app.use(router)
+
+await AuthenticationApi.getCsrfToken()
 
 app.mount('#app')
 

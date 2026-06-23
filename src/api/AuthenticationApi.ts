@@ -29,6 +29,10 @@ class AuthenticationApi {
     const response = await refreshApi.post('/auth/refresh-token')
     return response.data
   }
+
+  async getCsrfToken() {
+    return await httpApi.get('/auth/csrf-token')
+  }
 }
 
 export default new AuthenticationApi()
