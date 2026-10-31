@@ -28,3 +28,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# DevSecOps - bao cao sinh ra khi chay pipeline
+semgrep-report.json
+quality-gate-result.json
