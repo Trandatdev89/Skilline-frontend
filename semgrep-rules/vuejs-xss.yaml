@@ -1,0 +1,50 @@
+rules:
+  # ==================================================================
+  # RULE F1 - Stored XSS phia VueJS: v-html / :innerHTML bind du lieu
+  # dong ma khong boc DOMPurify.sanitize(...)
+  # Dung che do generic + pattern-regex vi Semgrep chua co parser cho
+  # template .vue; negative lookahead (?!...) loai tru cac truong hop
+  # da sanitize hoac la chuoi hang (literal).
+  # ==================================================================
+  - id: vuejs-stored-xss-vhtml-unsanitized
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      [Stored XSS] Directive v-html/innerHTML dang render noi dung dong ma khong
+      qua DOMPurify.sanitize(). Neu du lieu den tu API (comment, description, ...)
+      script doc hai da luu trong CSDL se duoc thuc thi tren trinh duyet nan nhan.
+      Khac phuc: dung noi suy {{ ... }} (tu dong escape) hoac
+      v-html="DOMPurify.sanitize(...)".
+    metadata:
+      category: security
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      references:
+        - https://vuejs.org/guide/best-practices/security.html#html-injection
+    paths:
+      include:
+        - "*.vue"
+    pattern-regex: (?:v-html|:inner-?[hH][tT][mM][lL])\s*=\s*"(?!\s*(?:DOMPurify\.sanitize|sanitizeHtml)\s*\()(?!\s*'[^']*'\s*")[^"]+"
+
+  # ==================================================================
+  # RULE F2 - DOM XSS sink trong ma JS/TS (innerHTML, outerHTML,
+  # insertAdjacentHTML, document.write) khong qua DOMPurify
+  # ==================================================================
+  - id: vuejs-dom-xss-innerhtml-assignment
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      [DOM XSS] Gan HTML truc tiep vao DOM ma khong qua DOMPurify.sanitize().
+      Khac phuc: el.textContent = ... hoac el.innerHTML = DOMPurify.sanitize(...).
+    metadata:
+      category: security
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp: "A03:2021 - Injection"
+      confidence: MEDIUM
+    paths:
+      include:
+        - "*.vue"
+        - "*.ts"
+        - "*.js"
+    pattern-regex: (?:\.(?:innerHTML|outerHTML)\s*=(?!=)(?!\s*DOMPurify\.sanitize\s*\()(?!\s*(?:''|""|``)\s*;?\s*$)|\.insertAdjacentHTML\s*\((?![^,]+,\s*DOMPurify\.sanitize\s*\()|document\.write(?:ln)?\s*\()
