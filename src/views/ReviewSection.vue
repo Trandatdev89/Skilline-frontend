@@ -45,7 +45,7 @@
             </div>
           </div>
 
-          <div class="review-item__comment">{{review.comment}}</div>
+          <div class="review-item__comment" v-html="review.comment"></div>
         </div>
       </template>
     </div>
